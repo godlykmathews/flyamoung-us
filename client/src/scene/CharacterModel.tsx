@@ -1,12 +1,13 @@
 import { Suspense, useEffect, useMemo, useRef, type MutableRefObject } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
-import { AnimationMixer, Group, LoopOnce, MathUtils, Mesh, Skeleton, SkinnedMesh, Vector3 } from 'three';
+import { Group, MathUtils, Mesh, Skeleton, SkinnedMesh, Vector3 } from 'three';
 import { clone } from 'three/addons/utils/SkeletonUtils.js';
 import type { SafetyDemoState, ServiceItem } from '../../../shared/protocol';
 import { ServiceItemModel } from './ServiceItemModel';
 import { ToolModel, type HeldToolKind } from './HeldTool';
 import { SafetyEquipment, type SafetyEquipmentHandle } from './SafetyEquipment';
+import { blendCharacterActions, createCharacterAnimation } from './characterAnimation';
 
 const MODEL_NAMES = new Set(['attendant','attendant-player','pilot','marshal','engineer','passenger-a','passenger-b','passenger-c']);
 function modelName(model: string) { const name=model.replace('-seated','');return MODEL_NAMES.has(name)?name:'passenger-a'; }
@@ -43,34 +44,36 @@ export function AuthoredCharacterModel({ model, movement, carrying=false, item=n
   const asset=useMemo(()=>{
     const object=clone(scene) as Group, skeletons=new Set<Skeleton>();
     object.traverse(node=>{if(node instanceof Mesh){node.castShadow=true;node.receiveShadow=true;}if(node instanceof SkinnedMesh){skeletons.add(node.skeleton);node.frustumCulled=false;}});
-    const mixer=new AnimationMixer(object);
-    const actions=Object.fromEntries(animations.map(clip=>[clip.name,mixer.clipAction(clip)]));
     const findHand=(side:string)=>object.getObjectByName(`Hand.${side}`)??object.getObjectByName(`Hand${side}`);
-    return {object,skeletons,mixer,actions,actionEntries:Object.entries(actions),left:findHand('L'),right:findHand('R')};
-  },[scene,animations]);
+    return {object,skeletons,left:findHand('L'),right:findHand('R')};
+  },[scene]);
+  const animation=useRef<ReturnType<typeof createCharacterAnimation>|null>(null);
   const previousPose=useRef(pose), transition=useRef(0), tray=useRef<Group>(null), arm=useRef<Group>(null);
   const character = useRef<Group>(null), safetyEquipment = useRef<SafetyEquipmentHandle>(null);
   const demonstrating = safety?.status === 'demonstrating' && pose !== 'dead' && !!SAFETY_CLIPS[safety.step];
   const vectors=useMemo(()=>({left:new Vector3(),right:new Vector3(),mid:new Vector3()}),[]);
   const walk=useRef(0);
   useEffect(()=>{
-    for(const [name,action] of asset.actionEntries) {
-      if(['Sit','Stand','DeadStanding','Dead'].includes(name)||name.startsWith('Safety')){action.setLoop(LoopOnce,1);action.clampWhenFinished=true;}
-      action.reset().play().setEffectiveWeight(0);
-      if(name.startsWith('Safety'))action.paused=true;
-    }
-    asset.actions[initialPose.current==='seated'?'Seated':'Idle']?.setEffectiveWeight(1);
-    return()=>{asset.mixer.stopAllAction();asset.mixer.uncacheRoot(asset.object);asset.skeletons.forEach(s=>s.dispose());};
-  },[asset]);
+    const current=createCharacterAnimation(asset.object,animations,initialPose.current==='seated'?'Seated':'Idle');
+    animation.current=current;
+    return()=>{
+      if(animation.current===current)animation.current=null;
+      current.dispose();asset.skeletons.forEach(s=>s.dispose());
+    };
+  },[asset,animations]);
   useEffect(()=>{
-    if(pose==='sitting')asset.actions.Sit?.reset().play();
-    if(pose==='dead')asset.actions[seatedDeath?'Dead':'DeadStanding']?.reset().play();
+    const actions=animation.current?.actions;
+    if(!actions)return;
+    if(pose==='sitting')actions.Sit?.reset().play();
+    if(pose==='dead')actions[seatedDeath?'Dead':'DeadStanding']?.reset().play();
     if((previousPose.current==='seated'||previousPose.current==='sitting')&&(pose==='standing'||pose==='idle'||pose==='walking')){
-      asset.actions.Stand?.reset().play();transition.current=1.25;
+      actions.Stand?.reset().play();transition.current=1.25;
     }
     previousPose.current=pose;
-  },[pose,seatedDeath,asset]);
+  },[pose,seatedDeath,asset,animations]);
   useFrame((_,dt)=>{
+    const current=animation.current;
+    if(!current)return;
     const delta=Math.min(dt,.1); walk.current=MathUtils.damp(walk.current,movement?.current??(pose==='walking'?1:0),9,delta);
     transition.current=Math.max(0,transition.current-delta);
     let active='Idle', motion=walk.current;
@@ -86,17 +89,10 @@ export function AuthoredCharacterModel({ model, movement, carrying=false, item=n
     else if(pose==='resting'){active='Idle';motion=0;}
     else if(pose==='gesture'){active='Gesture';motion=0;}
     const safetyTime = demonstrating&&safety ? demonstrationClipTime(safety.step, safety.elapsed) : 0;
-    for(const [name,action] of asset.actionEntries) {
-      const goal=active==='Idle'?(name==='Idle'?1-motion:name==='Walk'?motion:0):name===active?1:0;
-      action.setEffectiveWeight(MathUtils.damp(action.getEffectiveWeight(),goal,12,delta));
-      if (name === active && demonstrating) {
-        // The server owns time. Paused actions still evaluate their assigned pose in the mixer.
-        action.enabled = true; action.paused = true; action.time = safetyTime;
-      }
-    }
-    asset.mixer.update(delta);
-    character.current?.updateWorldMatrix(true,false);
-    asset.object.updateMatrixWorld(true);
+    blendCharacterActions(current.actionEntries, active, motion, delta, demonstrating ? safetyTime : undefined);
+    current.mixer.update(delta);
+    // Hand queries update their bone ancestors as needed. The renderer updates the
+    // full character tree once, including characters with no held equipment.
     if (demonstrating&&safety&&character.current) safetyEquipment.current?.update(safety.step,safetyTime,character.current,asset.left,asset.right);
     if(tray.current&&asset.left&&asset.right){
       asset.left.getWorldPosition(vectors.left);asset.right.getWorldPosition(vectors.right);

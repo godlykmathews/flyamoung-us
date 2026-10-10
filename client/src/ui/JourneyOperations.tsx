@@ -61,6 +61,7 @@ export function JourneyOperations({ snapshot, me, disabled = false }: { snapshot
  const op = snapshot.operations;
  disabled = disabled || !me || me.detained || !!snapshot.experience.players[me.id]?.incapacitated || (op.restraints[me.id] ?? 0) > 0;
  const [reviewed, setReviewed] = useState<string[]>([]);
+ useEffect(()=>{setReviewed([]);},[snapshot.roomId,snapshot.phase==='lobby']);
  const roster = me ? op.roster.find(entry => entry.playerId === me.id) : undefined;
  const pilot = !!me && (snapshot.training || me.role === 'Captain');
  const atDesk = !!me && Math.hypot(me.x - BOARDING_DOCUMENTS.x, me.z - BOARDING_DOCUMENTS.z) < BOARDING_DOCUMENTS.radius;
@@ -69,7 +70,11 @@ export function JourneyOperations({ snapshot, me, disabled = false }: { snapshot
  const checklist = crew ? ['Crew manifest received', 'Route and weather reviewed', 'Cabin checks assigned'] : ['Name matches your pass', 'Cabin baggage ready'];
  const action = useCallback(() => {
   if (disabled || !me || op.stage !== 'boarding' || roster?.boarded) return;
-  if (!roster?.documentsReceived && atDesk && reviewed.length === checklist.length) session.send('boardingAction', { kind: 'documents' });
+  if (!roster?.documentsReceived && atDesk) {
+   // Reviewing the desk card needs the cursor even when walking uses pointer lock.
+   if(document.pointerLockElement)document.exitPointerLock();
+   if(reviewed.length===checklist.length)session.send('boardingAction',{kind:'documents'});
+  }
   else if (roster?.documentsReceived && atGate) session.send('boardingAction', { kind: 'board' });
  }, [disabled, me, op.stage, roster, atDesk, atGate, reviewed.length, checklist.length]);
  useEffect(() => { if (snapshot.phase !== 'playing') return; const key = (event: KeyboardEvent) => { if (event.code === 'KeyE' && !event.repeat && !/INPUT|TEXTAREA|SELECT/.test((event.target as HTMLElement)?.tagName)) action(); }; window.addEventListener('keydown', key); return () => window.removeEventListener('keydown', key); }, [action, snapshot.phase]);
@@ -92,9 +97,9 @@ export function JourneyOperations({ snapshot, me, disabled = false }: { snapshot
    {op.stage === 'boarding' ? <div className="journey-objective"><small>GATE 04 · {crew ? 'CREW DISPATCH' : 'PASSENGER BOARDING'}</small><h2>{roster?.boarded ? 'Welcome aboard.' : roster?.documentsReceived ? 'Your flight awaits.' : crew ? 'Receive your briefing.' : 'Your boarding pass.'}</h2>
     {roster?.boarded ? <><p>{pilot ? takeoffReason : 'Find your station and complete your departure checks.'}</p><div className="journey-progress"><span style={{ width: `${count / Math.max(1, snapshot.players.length) * 100}%` }}/></div><div className="journey-count"><span>ON BOARD</span><span>{count} / {snapshot.players.length}</span></div>{pilot && <button className="journey-primary" disabled={disabled || !takeoffReady} onClick={() => session.send('startTakeoff')}>Begin takeoff <PlaneTakeoff size={16}/></button>}</> : <>
      <div className="journey-boarding-pass"><small>FLIGHT 404 / {crew ? 'CREW DOCUMENTS' : 'BOARDING PASS'}</small><strong>{me.name}</strong><span>{me.role}</span><i>04</i></div>
-     {!roster?.documentsReceived && <><p className="journey-documents-note">{atDesk ? 'Review your documents at the desk.' : 'Walk to the crew desk for your documents.'}</p><div className="journey-document-checks">{checklist.map(item => <label key={item}><input type="checkbox" checked={reviewed.includes(item)} disabled={disabled || !atDesk} onChange={event => setReviewed(items => event.target.checked ? [...items, item] : items.filter(value => value !== item))}/>{item}</label>)}</div></>}
+     {!roster?.documentsReceived && <><p className="journey-documents-note">{atDesk ? 'Press E to review your documents at the desk.' : 'Walk to the CHECK-IN desk for your documents.'}</p><div className="journey-document-checks">{checklist.map(item => <label key={item}><input type="checkbox" checked={reviewed.includes(item)} disabled={disabled || !atDesk} onChange={event => setReviewed(items => event.target.checked ? [...items, item] : items.filter(value => value !== item))}/>{item}</label>)}</div></>}
      <button className="journey-primary" disabled={disabled || (!roster?.documentsReceived ? !atDesk || reviewed.length !== checklist.length : !atGate)} onClick={action}>{roster?.documentsReceived ? 'Scan pass & board' : 'Collect documents'}<kbd>E</kbd></button>
-     <span className="journey-walk-hint">{roster?.documentsReceived ? 'Proceed to the scanner beside the jetbridge.' : 'W A S D to walk · right-drag or arrows to look.'}</span>
+     <span className="journey-walk-hint">{roster?.documentsReceived ? 'Walk toward the GATE 04 sign and scan your pass.' : 'W A S D to walk · click the gate to look around.'}</span>
     </>}
    </div> : (op.stage === 'takeoff' || op.stage === 'landing') && pilot ? <PilotConsole key={op.stage} snapshot={snapshot} disabled={disabled}/> : <div className={`journey-objective ${op.stage === 'crashed' ? 'journey-crash' : ''}`}><small>{op.stage === 'arrived' ? 'WELCOME TO NORTH BAY' : op.stage === 'crashed' ? 'EMERGENCY DESCENT' : 'FLIGHT DECK IN CONTROL'}</small><h2>{op.stage === 'arrived' ? 'Safely on the ground.' : op.stage === 'crashed' ? 'Brace for impact.' : op.stage === 'landing' ? 'Coming in to land.' : 'The journey begins.'}</h2><p>{op.stage === 'arrived' ? 'Your crew brought the flight home.' : op.stage === 'crashed' ? 'The aircraft is descending toward the sea.' : `Your pilot is ${op.stage === 'landing' ? 'flying the approach' : 'taking off'}. Everyone shares the same flight.`}</p>{(op.stage === 'takeoff' || op.stage === 'landing') && <div className="journey-instruments"><div><label>AIRSPEED</label><strong>{Math.round(op.airspeed)}<small>KT</small></strong></div><div><label>ALTITUDE</label><strong>{Math.round(op.altitude)}<small>FT</small></strong></div><div><label>GEAR</label><strong style={{fontSize:14}}>{op.gearDown ? 'DOWN' : 'UP'}</strong></div></div>}{op.stage === 'arrived' && <Check size={18}/>}</div>}
   </section>

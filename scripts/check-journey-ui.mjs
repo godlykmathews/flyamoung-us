@@ -15,6 +15,7 @@ const disabled = (markup, text) => {
 };
 try {
  const { JourneyOperations } = await vite.ssrLoadModule('/client/src/ui/JourneyOperations.tsx');
+ const { Scene } = await vite.ssrLoadModule('/client/src/scene/Scene.tsx');
  const { ImpostorKit, SecurityInteractions, nearestToolTarget } = await vite.ssrLoadModule('/client/src/ui/CabinSecurity.tsx');
  const { FlightGame } = await vite.ssrLoadModule('/server/src/systems/game.ts');
  const { BOARDING_DOCUMENTS, BOARDING_ENTRANCE } = await vite.ssrLoadModule('/shared/protocol.ts');
@@ -23,6 +24,16 @@ try {
  const base = game.snapshot(); base.phase = 'playing'; base.training = false; base.players[0].role = 'Captain';
  const render = (snapshot, options = {}) => renderToStaticMarkup(createElement(JourneyOperations, { snapshot, me: snapshot.players[0], ...options }));
  const scenario = () => structuredClone(base);
+ const renderScene = (snapshot) => renderToStaticMarkup(createElement(Scene, { snapshot, enabled:true, departing:false, emergencyDescent:false, onEmergencyComplete:()=>{},onDepartureComplete:()=>{},onNearby:()=>{},onArea:()=>{},onLock:()=>{} }));
+ check(renderScene(null).includes('data-scene="intro"'), 'Start page routes to the intro');
+ check(renderScene(base).includes('data-scene="gate"'), 'Unboarded snapshot routes Canvas to the gate');
+ const boarded = scenario();boarded.operations.roster[0].boarded=true;
+ // SSR has no authenticated session ID, so a missing receipt must fail closed at the gate.
+ check(renderScene(boarded).includes('data-scene="gate"'), 'Another player receipt cannot route an unauthenticated view into the cabin');
+ boarded.operations.stage='takeoff';
+ check(renderScene(boarded).includes('data-scene="journey-flight"'), 'Takeoff routes to the authoritative shared aircraft');
+ boarded.operations.stage='cruise';
+ check(renderScene(boarded).includes('data-scene="cabin"'), 'Cruise routes to the cabin');
  let s = scenario(); let html = render(s);
  check(html.includes('Receive your briefing.'), 'Captain sees crew documents');
  check(disabled(html, 'Collect documents'), 'Document checklist initially prevents claiming before review');

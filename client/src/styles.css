@@ -193,7 +193,7 @@ kbd { font: 9px var(--mono); background: #edf2f6; border: 1px solid #bfcfdb; col
 .help-footnote a { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
 .toast { position: absolute; z-index: 30; top: 78px; left: 50%; transform: translateX(-50%); max-width: min(90%, 540px); background: #fff4df; border: 1px solid #ddbd83; box-shadow: 0 6px 25px #20324722; color: #895e25; padding: 12px 16px; border-radius: 5px; display: flex; align-items: center; gap: 12px; font-size: 12px; }
 .toast > svg { flex-shrink: 0; }
-.webgl-error { display: flex; align-items: center; justify-content: center; height: 100%; padding: 25px; color: var(--ink); text-align: center; }
+.webgl-error { display: flex; flex-direction: column; gap: 16px; align-items: center; justify-content: center; height: 100%; padding: 25px; color: var(--ink); text-align: center; }
 .detained-banner { position: absolute; z-index: 4; top: 80px; left: 50%; transform: translateX(-50%); background: #fff0dcee; color: #895e25; border: 1px solid #dcb67e; display: flex; gap: 10px; padding: 12px 17px; border-radius: 4px; font-size: 11px; }
 
 @media (max-width: 1000px) {

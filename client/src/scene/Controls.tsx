@@ -38,7 +38,7 @@ export function Controls({enabled,onNearby,onArea,onLock,turbulence=0,cameraOver
   const release=()=>{drag.current=false;};const context=(e:MouseEvent)=>e.preventDefault();
   document.addEventListener('pointerlockchange',lock);window.addEventListener('keydown',down);window.addEventListener('keyup',up);window.addEventListener('blur',reset);document.addEventListener('mousemove',mouse);canvas.addEventListener('mousedown',click);window.addEventListener('mouseup',release);canvas.addEventListener('contextmenu',context);
   lock();
-  return ()=>{reset();input.active=false;input.locked=false;drag.current=false;onLock(false);document.removeEventListener('pointerlockchange',lock);window.removeEventListener('keydown',down);window.removeEventListener('keyup',up);window.removeEventListener('blur',reset);document.removeEventListener('mousemove',mouse);canvas.removeEventListener('mousedown',click);window.removeEventListener('mouseup',release);canvas.removeEventListener('contextmenu',context);};
+  return ()=>{reset();if(document.pointerLockElement===canvas)document.exitPointerLock();input.active=false;input.locked=false;drag.current=false;onLock(false);document.removeEventListener('pointerlockchange',lock);window.removeEventListener('keydown',down);window.removeEventListener('keyup',up);window.removeEventListener('blur',reset);document.removeEventListener('mousemove',mouse);canvas.removeEventListener('mousedown',click);window.removeEventListener('mouseup',release);canvas.removeEventListener('contextmenu',context);};
  },[gl,onLock]);
  useFrame((_,delta)=>{
   const snapshot=session.get().snapshot; const me=snapshot?.players.find(p=>p.id===session.id()); if(!snapshot||!me)return;

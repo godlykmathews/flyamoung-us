@@ -1,8 +1,9 @@
 import { Suspense, useEffect, useMemo, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
-import { Group, MathUtils, Mesh, Vector3 } from 'three';
+import { CanvasTexture, Group, MathUtils, Mesh, SRGBColorSpace, Vector3 } from 'three';
 import type { Player, Snapshot } from '../../../shared/protocol';
+import { moveTerminal, reconcileTerminalPosition } from '../../../shared/terminalMovement';
 import { session } from '../network/session';
 import { FlightModel } from './FlightModel';
 import { AuthoredCharacterModel } from './CharacterModel';
@@ -11,6 +12,12 @@ import { FlightAtmosphere } from './FlightEnvironment';
 // Supplied Boeing bounds: 10.978793m high / 34.294657m long.
 // FlightModel centres those bounds and normalizes the length to 24m.
 const AIRCRAFT_GROUND_Y = 3.74;
+
+/** Warm the small gate assets while the player is still on the start page. */
+export function preloadGateAssets() {
+ for(const name of ['gate-desk','boarding-scanner','crew-documents','passport','jetbridge']) useGLTF.preload(`/models/journey/${name}.glb`,false,false);
+ for(const name of ['attendant','passenger-a','passenger-b','passenger-c']) useGLTF.preload(`/models/animated/${name}.glb`,false,false);
+}
 
 /** Every airport prop is an original Blender model exported in metres. */
 export function JourneyAsset({ name, position = [0, 0, 0], rotation = [0, 0, 0], scale = 1 }: {
@@ -21,36 +28,43 @@ export function JourneyAsset({ name, position = [0, 0, 0], rotation = [0, 0, 0],
  return <group position={position} rotation={rotation} scale={scale}><primitive object={model} dispose={null}/></group>;
 }
 
-function TerminalCamera({ snapshot, meId, enabled }: { snapshot: Snapshot; meId: string; enabled: boolean }) {
+function TerminalCamera({ snapshot, meId, enabled, onLock }: { snapshot: Snapshot; meId: string; enabled: boolean; onLock:(locked:boolean)=>void }) {
  const { camera, gl } = useThree();
- const keys = useRef(new Set<string>()), yaw = useRef(0), pitch = useRef(0), drag = useRef(false), timer = useRef(0), initialized = useRef(false);
+ const keys = useRef(new Set<string>()), yaw = useRef(0), pitch = useRef(0), drag = useRef(false), locked=useRef(false), timer = useRef(0), initialized = useRef(false);
+ const predicted=useRef({x:0,z:11});
  const point = useMemo(() => new Vector3(), []);
  const walkingEnabled = enabled && snapshot.phase === 'playing';
- useEffect(() => { initialized.current = false; }, [snapshot.phase]);
+ useEffect(() => { initialized.current = false; timer.current=0; }, [snapshot.phase,snapshot.roomId]);
  useEffect(() => {
   const canvas = gl.domElement;
   const stop = () => { keys.current.clear(); drag.current = false; session.send('move', { dx: 0, dz: 0, yaw: yaw.current }); };
+  const lock=()=>{locked.current=document.pointerLockElement===canvas;onLock(locked.current);if(!locked.current)stop();};
   const down = (event: KeyboardEvent) => { if (!walkingEnabled || /INPUT|TEXTAREA|SELECT/.test((event.target as HTMLElement)?.tagName)) return; if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.code)) { keys.current.add(event.code); event.preventDefault(); } };
   const up = (event: KeyboardEvent) => keys.current.delete(event.code);
-  const mouse = (event: MouseEvent) => { if (walkingEnabled && drag.current) { yaw.current -= event.movementX * .003; pitch.current = MathUtils.clamp(pitch.current - event.movementY * .002, -.6, .6); } };
-  const start = (event: MouseEvent) => { if (walkingEnabled && event.button === 2) { drag.current = true; canvas.focus(); } };
+  const mouse = (event: MouseEvent) => { if (walkingEnabled && (drag.current||locked.current)) { yaw.current -= event.movementX * .002; pitch.current = MathUtils.clamp(pitch.current - event.movementY * .002, -1.2, 1.2); } };
+  const start = (event: MouseEvent) => { if(!walkingEnabled)return;canvas.focus();if(event.button===2){drag.current=true;return;}if(event.button===0&&!document.pointerLockElement){try{canvas.requestPointerLock?.()?.catch(()=>{});}catch{/* Right-drag remains available. */}} };
   const release = () => { drag.current = false; };
   const context = (event: MouseEvent) => event.preventDefault();
   canvas.tabIndex = 0;
-  window.addEventListener('keydown', down); window.addEventListener('keyup', up); window.addEventListener('blur', stop); window.addEventListener('mousemove', mouse); window.addEventListener('mouseup', release); canvas.addEventListener('mousedown', start); canvas.addEventListener('contextmenu', context);
-  return () => { stop(); window.removeEventListener('keydown', down); window.removeEventListener('keyup', up); window.removeEventListener('blur', stop); window.removeEventListener('mousemove', mouse); window.removeEventListener('mouseup', release); canvas.removeEventListener('mousedown', start); canvas.removeEventListener('contextmenu', context); };
- }, [gl, walkingEnabled]);
+  document.addEventListener('pointerlockchange',lock);window.addEventListener('keydown', down); window.addEventListener('keyup', up); window.addEventListener('blur', stop); window.addEventListener('mousemove', mouse); window.addEventListener('mouseup', release); canvas.addEventListener('mousedown', start); canvas.addEventListener('contextmenu', context);
+  lock();
+  return () => { stop();if(document.pointerLockElement===canvas)document.exitPointerLock();onLock(false);document.removeEventListener('pointerlockchange',lock);window.removeEventListener('keydown', down); window.removeEventListener('keyup', up); window.removeEventListener('blur', stop); window.removeEventListener('mousemove', mouse); window.removeEventListener('mouseup', release); canvas.removeEventListener('mousedown', start); canvas.removeEventListener('contextmenu', context); };
+ }, [gl, walkingEnabled,onLock]);
  useFrame((_, dt) => {
   if (snapshot.phase === 'lobby') { camera.position.set(0, 1.68, 13); camera.lookAt(-1.1, 1.6, 5.5); return; }
   const me = snapshot.players.find(player => player.id === meId); if (!me) return;
-  if (!initialized.current) { yaw.current = me.yaw; camera.position.set(me.x, 1.68, me.z); initialized.current = true; }
+  if (!initialized.current) { yaw.current = me.yaw;pitch.current=0;predicted.current={x:me.x,z:me.z};camera.position.set(me.x, 1.68, me.z); initialized.current = true; }
   const k = keys.current, delta = Math.min(dt, .1);
-  yaw.current += ((k.has('ArrowLeft') ? 1 : 0) - (k.has('ArrowRight') ? 1 : 0)) * delta * 1.4;
-  pitch.current = MathUtils.clamp(pitch.current + ((k.has('ArrowUp') ? 1 : 0) - (k.has('ArrowDown') ? 1 : 0)) * delta, -.6, .6);
-  const forward = enabled ? (k.has('KeyW') ? 1 : 0) - (k.has('KeyS') ? 1 : 0) : 0, sideways = enabled ? (k.has('KeyD') ? 1 : 0) - (k.has('KeyA') ? 1 : 0) : 0;
+  yaw.current += ((k.has('ArrowLeft') ? 1 : 0) - (k.has('ArrowRight') ? 1 : 0)) * delta * 1.7;
+  pitch.current = MathUtils.clamp(pitch.current + ((k.has('ArrowUp') ? 1 : 0) - (k.has('ArrowDown') ? 1 : 0)) * delta, -1.2, 1.2);
+  const forward = walkingEnabled ? (k.has('KeyW') ? 1 : 0) - (k.has('KeyS') ? 1 : 0) : 0, sideways = walkingEnabled ? (k.has('KeyD') ? 1 : 0) - (k.has('KeyA') ? 1 : 0) : 0;
+  const dx=-Math.sin(yaw.current)*forward+Math.cos(yaw.current)*sideways,dz=-Math.cos(yaw.current)*forward-Math.sin(yaw.current)*sideways;
+  predicted.current=moveTerminal(predicted.current.x,predicted.current.z,dx,dz,delta);
+  const reconciled=reconcileTerminalPosition(predicted.current,me,delta,!!(dx||dz));predicted.current=reconciled;
+  if(reconciled.snapped)camera.position.set(reconciled.x,1.68,reconciled.z);
   timer.current += delta;
-  if (timer.current >= .05) { timer.current = 0; session.send('move', { dx: -Math.sin(yaw.current) * forward + Math.cos(yaw.current) * sideways, dz: -Math.cos(yaw.current) * forward - Math.sin(yaw.current) * sideways, yaw: yaw.current }); }
-  point.set(me.x, 1.68, me.z); camera.position.lerp(point, 1 - Math.exp(-15 * delta)); camera.rotation.set(pitch.current, yaw.current, 0, 'YXZ');
+  if (timer.current >= .05) { timer.current = 0; if(walkingEnabled)session.send('move', { dx,dz,yaw: yaw.current }); }
+  point.set(predicted.current.x, 1.68, predicted.current.z); camera.position.lerp(point, 1 - Math.exp(-20 * delta)); camera.rotation.set(pitch.current, yaw.current, 0, 'YXZ');
  });
  return null;
 }
@@ -111,22 +125,46 @@ function TerminalPeer({ player }: { player: Player }) {
  return <group ref={group} position={[player.x, 0, player.z]} rotation={[0, player.yaw, 0]}><AuthoredCharacterModel model={player.model === 'crew-man' ? 'passenger-b' : player.model} movement={movement}/></group>;
 }
 
-function Terminal({ snapshot, meId, enabled }: { snapshot: Snapshot; meId: string; enabled: boolean }) {
+/** Signs are available before any GLB finishes loading, so the route stays visible. */
+function GateSign({title,subtitle,position,width=2.4}:{title:string;subtitle:string;position:[number,number,number];width?:number}) {
+ const texture=useMemo(()=>{
+  const canvas=document.createElement('canvas');canvas.width=1024;canvas.height=256;
+  const context=canvas.getContext('2d')!;
+  context.fillStyle='#173b50';context.fillRect(0,0,1024,256);
+  context.fillStyle='#c4a66f';context.fillRect(0,0,12,256);
+  context.fillStyle='#f6faf7';context.font='600 78px sans-serif';context.fillText(title,52,110);
+  context.fillStyle='#c1d5d9';context.font='32px sans-serif';context.fillText(subtitle,56,183);
+  const map=new CanvasTexture(canvas);map.colorSpace=SRGBColorSpace;return map;
+ },[title,subtitle]);
+ useEffect(()=>{texture.needsUpdate=true;return()=>texture.dispose();},[texture]);
+ return <mesh name={`gate-sign-${title}`} position={position}><planeGeometry args={[width,width/4]}/><meshBasicMaterial map={texture} toneMapped={false}/></mesh>;
+}
+
+function LoadingDesk() {
+ return <group name="gate-desk-loading"><mesh position={[0,.58,0]}><boxGeometry args={[2.8,1.16,.7]}/><meshStandardMaterial color="#e6e8df"/></mesh><mesh position={[0,1.18,0]}><boxGeometry args={[2.92,.06,.8]}/><meshStandardMaterial color="#315464"/></mesh></group>;
+}
+function LoadingScanner() {
+ return <group name="gate-scanner-loading"><mesh position={[0,.52,0]}><boxGeometry args={[.26,1.04,.3]}/><meshStandardMaterial color="#e9eee9"/></mesh><mesh position={[0,1.09,.03]} rotation={[-.2,0,0]}><boxGeometry args={[.32,.12,.34]}/><meshStandardMaterial color="#315464"/></mesh></group>;
+}
+
+function Terminal({ snapshot, meId, enabled,onLock }: { snapshot: Snapshot; meId: string; enabled: boolean;onLock:(locked:boolean)=>void }) {
  return <>
   <GroundPlane/><Concourse/>
-  <Suspense fallback={null}>
-   <JourneyAsset name="airport-terminal" position={[48, 0, -23]} rotation={[0, -.4, 0]}/>
-   <JourneyAsset name="gate-desk" position={[-2.4, 0, 9.4]}/>
-   <JourneyAsset name="crew-documents" position={[-1.65, 1.18, 9.4]}/><JourneyAsset name="passport" position={[-2.2, 1.18, 9.52]}/>
-   <JourneyAsset name="boarding-scanner" position={[.8, 0, 5.4]}/>
-   <JourneyAsset name="jetbridge" position={[0, 0, 1]}/><JourneyAsset name="jetbridge" position={[0, 0, -7]}/>
-   <group position={[-2.4, 0, 8.5]} rotation={[0, Math.PI, 0]}><AuthoredCharacterModel model="attendant" pose="gesture"/></group>
-   {snapshot.players.filter(player => player.id !== meId && !snapshot.operations.roster.find(entry => entry.playerId === player.id)?.boarded).map((player, index) => <TerminalPeer key={player.id} player={snapshot.phase === 'lobby' ? { ...player, x: -3.5 + index % 4 * 2.2, z: 11.3 + Math.floor(index / 4) * .85, yaw: 0 } : player}/>)}
-   {snapshot.phase === 'playing' && [0, 1, 2].map(index => <TerminalTraveller key={index} index={index} elapsed={snapshot.operations.elapsed}/>)}
-   {[-9, -6.8, 6.5, 9].map((x, index) => <group key={x} position={[x, 0, 7.2]}><AuthoredCharacterModel model={`passenger-${['a', 'b', 'c'][index % 3]}`} pose="seated"/><JourneyAsset name="suitcase" position={[.65, 0, .4]} rotation={[0, -.4, 0]}/></group>)}
-   <group position={[8, 3.71, -12.5]} rotation={[0, Math.PI / 2, 0]}><FlightModel gearDown/></group>
-  </Suspense>
-  <TerminalCamera snapshot={snapshot} meId={meId} enabled={enabled}/>
+  <GateSign title="CHECK-IN" subtitle="Crew documents / Boarding passes" position={[-2.4,2.7,9.15]} width={2.8}/>
+  <GateSign title="GATE 04" subtitle="FLIGHT 404     Boarding ahead" position={[.8,3.35,5.3]} width={3}/>
+  <mesh name="boarding-path" rotation={[-Math.PI/2,0,0]} position={[.8,.003,8.3]}><planeGeometry args={[.07,5.4]}/><meshBasicMaterial color="#b39966"/></mesh>
+  {/* A character or parked aircraft must never suspend the desk and scanner. */}
+  <group position={[-2.4,0,9.4]}><Suspense fallback={<LoadingDesk/>}><JourneyAsset name="gate-desk"/></Suspense></group>
+  <group position={[.8,0,5.4]}><Suspense fallback={<LoadingScanner/>}><JourneyAsset name="boarding-scanner"/></Suspense></group>
+  <Suspense fallback={null}><JourneyAsset name="crew-documents" position={[-1.65,1.18,9.4]}/><JourneyAsset name="passport" position={[-2.2,1.18,9.52]}/></Suspense>
+  <Suspense fallback={null}><JourneyAsset name="airport-terminal" position={[48,0,-23]} rotation={[0,-.4,0]}/></Suspense>
+  {[1,-7].map(z=><Suspense key={z} fallback={null}><JourneyAsset name="jetbridge" position={[0,0,z]}/></Suspense>)}
+  <Suspense fallback={null}><group position={[-2.4,0,8.5]} rotation={[0,Math.PI,0]}><AuthoredCharacterModel model="attendant" pose="gesture"/></group></Suspense>
+  {snapshot.players.filter(player=>player.id!==meId&&!snapshot.operations.roster.find(entry=>entry.playerId===player.id)?.boarded).map((player,index)=><Suspense key={player.id} fallback={null}><TerminalPeer player={snapshot.phase==='lobby'?{...player,x:-3.5+index%4*2.2,z:11.3+Math.floor(index/4)*.85,yaw:0}:player}/></Suspense>)}
+  {snapshot.phase==='playing'&&[0,1,2].map(index=><Suspense key={index} fallback={null}><TerminalTraveller index={index} elapsed={snapshot.operations.elapsed}/></Suspense>)}
+  {[-9,-6.8,6.5,9].map((x,index)=><Suspense key={x} fallback={null}><group position={[x,0,7.2]}><AuthoredCharacterModel model={`passenger-${['a','b','c'][index%3]}`} pose="seated"/><JourneyAsset name="suitcase" position={[.65,0,.4]} rotation={[0,-.4,0]}/></group></Suspense>)}
+  <group position={[8,3.71,-12.5]} rotation={[0,Math.PI/2,0]}><FlightModel gearDown/></group>
+  <TerminalCamera snapshot={snapshot} meId={meId} enabled={enabled} onLock={onLock}/>
  </>;
 }
 
@@ -187,16 +225,12 @@ function AircraftJourney({ snapshot }: { snapshot: Snapshot }) {
 }
 
 /** Content for the existing scene root Canvas, not a nested canvas. */
-export function JourneyScene({ snapshot, meId, enabled = true }: { snapshot: Snapshot; meId: string; enabled?: boolean }) {
+export function JourneyScene({ snapshot, meId, enabled = true,onLock }: { snapshot: Snapshot; meId: string; enabled?: boolean;onLock:(locked:boolean)=>void }) {
  const terminal = snapshot.phase === 'lobby' || snapshot.operations.stage === 'boarding';
  return <>
   <FlightAtmosphere/><fog attach="fog" args={['#c6d8dd', 160, 1600]}/>
   <ambientLight intensity={.45}/><hemisphereLight args={['#e6f2fa', '#8a988b', 1.35]}/>
   <directionalLight position={[-35, 65, 20]} intensity={2.3} color="#fff6e5" castShadow shadow-mapSize={[2048, 2048]} shadow-camera-left={-40} shadow-camera-right={40} shadow-camera-top={40} shadow-camera-bottom={-40} shadow-normalBias={.02}/>
-  {terminal ? <Terminal snapshot={snapshot} meId={meId} enabled={enabled}/> : <AircraftJourney snapshot={snapshot}/>}
+  {terminal ? <Terminal snapshot={snapshot} meId={meId} enabled={enabled} onLock={onLock}/> : <AircraftJourney snapshot={snapshot}/>}
  </>;
-}
-
-export function isJourneyExterior(snapshot: Snapshot, meId: string) {
- return snapshot.phase === 'lobby' || snapshot.operations.stage === 'boarding' && !snapshot.operations.roster.find(entry => entry.playerId === meId)?.boarded || ['takeoff', 'landing', 'crashed', 'arrived'].includes(snapshot.operations.stage);
 }

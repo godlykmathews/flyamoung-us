@@ -6,6 +6,7 @@ import { FLIGHT_CONTROL_STATION, INTERACTION_STATIONS, IMPOSTOR_STATION, SERVICE
 import { AutopilotController, type FlightController } from './flight.js';
 import { FlightOperations } from './operations.js';
 import { assignRoles } from './roles.js';
+import { moveTerminal } from '../../../shared/terminalMovement.js';
 import { CabinSimulation, SERVICE_ITEMS } from './cabin.js';
 import { ExperienceSimulation } from './experience.js';
 import { JourneySimulation } from './story.js';
@@ -630,7 +631,7 @@ export class FlightGame {
     if (this.phase === 'lobby' || this.phase === 'playing') for (const [id, input] of this.inputs) {
       const player = this.active(id);
       if (!player || this.now() - input.at > 250 || (this.safety.status === 'demonstrating' && this.safety.operatorId === id)) { this.inputs.delete(id); continue; }
-      if (this.phase === 'playing' && !this.aboard(id)) Object.assign(player, { x: Math.max(-5, Math.min(5, player.x + input.dx * dt * 3.1)), z: Math.max(4, Math.min(14, player.z + input.dz * dt * 3.1)), yaw: input.yaw });
+      if (this.phase === 'playing' && !this.aboard(id)) Object.assign(player, moveTerminal(player.x, player.z, input.dx, input.dz, dt), { yaw: input.yaw });
       else if (!['takeoff', 'landing'].includes(this.operations.stage)) Object.assign(player, movePlayer(player.x, player.z, input.dx, input.dz, dt), { yaw: input.yaw });
     }
     if (this.phase === 'meeting') { this.meetingRemaining = Math.max(0, this.meetingRemaining - dt); if (!this.meetingRemaining) this.resolveMeeting(); return; }

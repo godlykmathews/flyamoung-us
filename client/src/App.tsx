@@ -2,7 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExter
 import { ArrowRight, Plane, ChevronDown, Copy, Check, LockKeyhole, ShieldCheck, LogOut, X, ListChecks, Map, MessageSquare, AlertTriangle, Settings2, Volume2, VolumeX, Users, Coffee } from 'lucide-react';
 import { FlightExperiencePanel, PassengerMoment, IncidentStatus, ExperienceHold, nearbyExperienceTarget, useExperienceAction, PlayerOrders } from './ui/FlightExperience';
 import { Scene } from './scene/Scene';
-import { isJourneyExterior } from './scene/JourneyScene';
+import { isJourneyExterior } from './game/sceneMode';
 import { JourneyOperations } from './ui/JourneyOperations';
 import { ImpostorKit, SecurityInteractions, activateEquippedTool } from './ui/CabinSecurity';
 import { session } from './network/session';

@@ -1,5 +1,39 @@
 # Prototype validation
 
+## Firefox character-rendering crash fix — 11 October 2026
+
+- Native Firefox at `http://localhost:5173/` reproduced the reported fallback. Its console identified `TypeError: can't access property "_cacheIndex", firstInactiveBinding is undefined` in `AnimationMixer._lendBinding`, reached from character action initialization during React effect replay. The subsequent context-lost warning followed renderer teardown; the fallback had incorrectly attributed this application exception to hardware acceleration.
+- Character effects now create a fresh mixer and action set on each setup. Cleanup stops and uncaches that exact set; memoized scene clones no longer retain invalidated animation bindings. Active-pose scheduling and independent skeletons remain intact. The scene boundary logs the actual error, provides **Reload scene**, and clears an error when the scene mode changes.
+- The new regression loads the real attendant and passenger GLBs, creates four independent clones of each, and repeats three setup/cleanup cycles through walking, seated, death and safety poses. It exercises mixer uncache and skeleton disposal and checks finite hand transforms. `npm test`: **118 tests pass**. `npm run test:ui`: **41 SSR markup checks pass**. `npm run build` passes TypeScript, Vite and server compilation; final bundle `index-CxtYspXY.js` is about 1.51 MB / 433 KB gzip. The existing bundle-size advisory remains.
+- A fresh Firefox reload rendered the textured intro plane. Solo practice created a room, Mark ready and Start flight displayed Gate 04, and E enabled document review. Native screenshots confirmed the check-in desk, scanner, seated/walking travellers and gate attendant rendering without the previous scene fallback.
+- The user continued the same Firefox session while computer control was paused to avoid interfering with their input. Further native captures showed the boarded cabin, safety arrangement screen, and the live seatbelt demonstration with hand-held equipment. These are current visual observations; the user's movement and task actions are not claimed as an agent-driven end-to-end playthrough. No measured FPS, takeoff/landing visual pass, final clean-console inspection or hosted deployment is claimed in this pass.
+- The local dev backend child was alive without a TCP listener. A compiled server was started on port 2567, after which `/health` returned 200 and allowed the port 5173 frontend; the pending browser connection then succeeded. Earlier console health errors were connection failures while the server was offline. Original dev logs are unavailable, so the suspected earlier port conflict is not a confirmed diagnosis.
+
+The lifecycle fix follows [React's documented setup/cleanup replay](https://react.dev/reference/react/StrictMode) and [Three.js mixer cleanup rules](https://threejs.org/docs/pages/AnimationMixer.html). A community research pass found general effect-cleanup guidance, but no substantive report of this exact animation-cache failure; diagnosis is based on the local Firefox stack and regression reproduction.
+
+### Community Wisdom: [Ultimate Guide on React cleanup function](https://dev.to/jaboarnoldlandry/ultimate-guide-on-react-cleanup-function-293k)
+
+> **Source**: [jaboarnoldlandry](https://dev.to/jaboarnoldlandry) · **Tags**: `react`, `useeffect`, `performance`, `webdev`
+>
+> The article describes cleanup before effect reruns and the development remount check. It corroborates the general lifecycle concern; it does not diagnose Three.js binding caches. No comments were returned with additional counterarguments.
+>
+> [Read Full Discussion](https://dev.to/jaboarnoldlandry/ultimate-guide-on-react-cleanup-function-293k)
+
+## Boarding startup and movement fixes — 11 October 2026
+
+- The HUD and Canvas now use one authenticated boarding selector. The renderer stays mounted between intro, terminal, cabin and flight; keyed React fragments replace scene content while retaining proper Scene background/fog attachments. Camera reset runs after old camera cleanup. Controllers explicitly release native pointer lock when removed.
+- Gate signs and loading silhouettes render before GLBs resolve. Desks/scanners and background characters have separate Suspense boundaries; cabin movement is independent of character loading too. Small gate assets warm on the start page. Gate movement predicts the same bounded 3.1 m/s simulation used by the server, and settles to authoritative position when stopped. Pressing E at the desk releases the cursor for reviewing documents.
+- Character mixers now schedule only active poses and their fades. Four animation tests use Three.js, including the actual Blender attendant GLB, to check walking, seating, death, all four safety demonstrations and hand transforms. These checks measure correctness and action scheduling, not browser FPS.
+- `npm test`: **117 tests pass**. Added startup/boarding scene routing, per-player receipt isolation, terminal prediction, normalized speed, bounds and accessible document/scanner routes.
+- `npm run test:ui`: **41 Node-rendered checks pass**, including Canvas view selection. SSR does not create a WebGL context or exercise native input.
+- `npm run build` passes TypeScript, Vite and compiled server generation. The existing large-bundle advisory remains; final client is `index-8_CqoQsb.js` (1.51 MB / 433 KB gzip). The rebuilt app is served locally at **http://localhost:2567**. Production HTTP checks pass health, frontend freshness and binary headers for six boarding GLBs.
+- The live **ten-client** Colyseus scenario passes on the rebuilt port 2567 server: terminal movement, speed normalization, position replication, room locking, disconnect and privacy. Temporary clients leave their test room.
+- The live **complete solo flight** scenario also passes on port 2567: document collection, scanning into the cabin, supporting stations, safety puzzle/demonstration, departure duties, manual takeoff, service, turbulence and pressure recovery, manual landing into a crew victory, and restart with cleared boarding receipts. The test client and room close afterward. These two scenarios were selected for this startup/movement change; the other integration scenarios were not rerun in this pass.
+
+Chrome visual testing remains blocked: `cua.getApp('Google Chrome')` repeatedly returned **“Computer Use was not approved to use Google Chrome”**, including after the user's permission-change retries. No current Chrome screenshots, pointer-lock playthrough or measured frame-rate improvement is claimed. These local changes have not been deployed to Vercel or Render.
+
+For the next Chrome pass, start Solo practice, dismiss the role card and confirm the terminal appears. Walk to CHECK-IN, press E to release the cursor, tick the document items and collect them. Walk to GATE 04, scan the pass, then confirm cabin movement. Repeat leaving/rejoining and takeoff/landing transitions; check that no previous camera or captured cursor survives a change of scene.
+
 ## Boarding, manual flight and impostor tools — 11 October 2026
 
 - `npm test`: **100 tests pass**, including actual document collection and boarding, departure duties before takeoff, manual climb, landing and braking, unsuccessful rotation, crash progression after the round ends, restart cleanup, private inventory, single-use devices, disarm holds, rope rescue and unavailable-specialist coverage. Legacy cabin fixtures intentionally start in cruise so they continue testing their focused subsystem; separate journey tests exercise the real boarding flow.
