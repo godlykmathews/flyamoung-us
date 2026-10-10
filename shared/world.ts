@@ -1,16 +1,11 @@
+import { TASKS } from './tasks.js';
+export { TASKS } from './tasks.js';
+export type { TaskId } from './tasks.js';
 export const EYE_HEIGHT = 1.68;
 export const WALK_SPEED = 3.1;
 export const PLAYER_RADIUS = 0.23;
 export const CABIN_HALF_WIDTH = 3.7;
 export const SEAT_CENTERS = [-2.95, -1.9, 1.9, 2.95] as const;
-export const TASKS = [
- { id:'checklist', name:'Crew systems check', area:'Flight deck', hint:'Confirm each item on the crew checklist.', x:-1.25, z:-12, color:'#82cfc0' },
- { id:'navigation', name:'Verify flight route', area:'Flight deck', hint:'Repeat the waypoint sequence.', x:1.25, z:-12, color:'#98b6e7' },
- { id:'seatbelts', name:'Inspect seatbelts', area:'Passenger cabin', hint:'Check the highlighted seat rows in order.', x:1.55, z:-3.9, color:'#e8bb71' },
- { id:'meals', name:'Prepare cabin service', area:'Aft galley', hint:'Pack the meal trays in the shown order.', x:-2.6, z:9.4, color:'#dba0ad' },
- { id:'electrical', name:'Check cabin circuits', area:'Maintenance bay', hint:'Verify the four circuits on the distribution panel.', x:2.6, z:12.3, color:'#c1b0e5' }
-] as const;
-export type TaskId = typeof TASKS[number]['id'];
 export const SEAT_ROWS = [-7,-4,-1,2,5];
 // Passengers share seat coordinates with the Blender cabin; approach points
 // stay in the wide aisle and never require walking through seat colliders.
@@ -47,7 +42,10 @@ export function movePlayer(x:number,z:number,dx:number,dz:number,dt:number) {
  if(canStand(x,nz))z=nz;
  return {x,z};
 }
-export function nearestTask(x:number,z:number) { return TASKS.find(t=>Math.hypot(x-t.x,z-t.z)<2.25); }
+export function nearestTask(x:number,z:number, eligible: (task: typeof TASKS[number]) => boolean = () => true) {
+ return TASKS.filter(t=>eligible(t)&&Math.hypot(x-t.x,z-t.z)<2.25&&hasCabinSight({x,z},t))
+  .sort((a,b)=>Math.hypot(x-a.x,z-a.z)-Math.hypot(x-b.x,z-b.z))[0];
+}
 /** Interaction sight across the flight-deck partition must pass its open door.
  * Furniture is deliberately excluded: seated occupants are inside seat bounds.
  */

@@ -139,12 +139,12 @@ async function multiplayerScenario() {
   assert.equal(host.snapshot!.players.filter(player => player.model === 'attendant-player').length, 1);
   assertPrivateSnapshots(peers);
 
-  const actor = loyal[0]!;
+  const actor = peers.find(peer => peer.me.role === 'Cabin Crew')!, engineer = peers.find(peer => peer.me.role === 'Engineer')!, loyalActor = loyal[0]!;
   await expectRejection(actor, 'beginTask', { taskId: 'checklist' }, 'remote task interaction rejected');
   assert.equal(host.snapshot!.tasks.some(task => task.completed), false);
-  await expectRejection(actor, 'sabotage', { kind: 'blackout' }, 'crew cannot sabotage');
-  await expectRejection(actor, 'killNpc', { npcId: 'attendant-1' }, 'crew cannot kill NPCs');
-  await expectRejection(actor, 'impostorTask', { taskId: 'tamper-galley' }, 'crew cannot falsify manifest');
+  await expectRejection(loyalActor, 'sabotage', { kind: 'blackout' }, 'crew cannot sabotage');
+  await expectRejection(loyalActor, 'killNpc', { npcId: 'attendant-1' }, 'crew cannot kill NPCs');
+  await expectRejection(loyalActor, 'impostorTask', { taskId: 'tamper-galley' }, 'crew cannot falsify manifest');
   await expectRejection(saboteur, 'impostorTask', { taskId: 'tamper-galley' }, 'remote manifest action rejected');
   assert.equal(host.snapshot!.sabotage, null);
   await serveRequest(actor);
@@ -177,12 +177,14 @@ async function multiplayerScenario() {
   await until(() => saboteur.secret?.cooldown === 0, 'initial sabotage cooldown expires', 18_000);
   saboteur.send('sabotage', { kind: 'blackout' });
   await until(() => peers.every(peer => peer.snapshot?.sabotage === 'blackout'), 'authorized sabotage replicates');
-  await moveTo(actor, 0, actor.me.z); await moveTo(actor, 0, 12.3); await moveTo(actor, 1, 12.3);
-  await completeStation(actor, 'electrical');
+  saboteur.send('drawWeapon', { drawn: false });
+  await until(() => !saboteur.me.weaponDrawn, 'weapon concealed before public checks');
+  await moveTo(engineer, 0, engineer.me.z); await moveTo(engineer, 0, 12.3); await moveTo(engineer, 1, 12.3);
+  await completeStation(engineer, 'electrical');
   await until(() => host.snapshot?.sabotage === null, 'nearby crew task repairs blackout');
   assert.deepEqual(host.snapshot!.npcs.find(npc => npc.id === 'attendant-1'), deadAttendant, 'dead AI never moves or serves');
   await until(() => saboteur.secret?.objectives.every(o => o.completed), 'all three private assignments are complete');
-  peers.filter(peer => peer !== actor).forEach(peer => assert.equal(peer.challenge, undefined, 'task challenge leaked to another player'));
+  peers.filter(peer => peer !== engineer).forEach(peer => assert.equal(peer.challenge, undefined, 'task challenge leaked to another player'));
 
   actor.send('chat', { text: 'Power restored. Meet in the cabin.' });
   await until(() => third.snapshot?.chat.some(message => message.text === 'Power restored. Meet in the cabin.'), 'intercom replicated');
@@ -216,7 +218,8 @@ async function trainingScenario() {
   await until(() => pilot.snapshot?.phase === 'playing' && pilot.secret?.allegiance === 'crew', 'solo training starts without saboteur');
   await expectRejection(pilot, 'completeTask', { taskId: 'checklist', token: 'forged', sequence: [0, 1, 2, 3] }, 'forged challenge rejected');
 
-  for (const task of TASKS) {
+  const practiceTasks = TASKS.filter(task => ['checklist', 'navigation', 'seatbelts', 'meals', 'electrical'].includes(task.id));
+  for (const task of practiceTasks) {
     // Approach side stations from the clear aisle after reaching their row.
     await moveTo(pilot, 0, pilot.me.z);
     await moveTo(pilot, 0, task.z);
@@ -252,7 +255,7 @@ async function trainingScenario() {
   await moveTo(pilot, 0, -8.5); await holdAction(pilot, 'cabin-check', 'cabin-check', 4200);
   await until(() => pilot.snapshot?.phase === 'ended', 'full story ends training round');
   assert.equal(pilot.snapshot!.winner, 'crew');
-  assert.equal(pilot.snapshot!.tasks.filter(task => task.completed).length, TASKS.length);
+  assert.equal(pilot.snapshot!.tasks.filter(task => task.completed).length, practiceTasks.length);
   assertPrivateSnapshots([pilot]);
   await pilot.leave();
   console.log('PASS: solo training, five supporting stations, safety card arrangement and timed demonstration, sustained world actions, walking/seated passengers, human service, flight control and full journey victory');
@@ -267,11 +270,12 @@ async function holdExperience(peer: Peer, kind: string, targetId: string, millis
 }
 
 async function experienceScenario() {
-  const host = await create('Experience host'), second = await join(host, 'Passenger'), third = await join(host, 'Crew');
-  const peers = [host, second, third]; peers.forEach(peer => peer.send('ready', { ready: true }));
+  const host = await create('Experience host');
+  const peers = [host, ...await Promise.all(Array.from({ length: 5 }, (_, i) => join(host, `Crew ${i + 2}`)))]; peers.forEach(peer => peer.send('ready', { ready: true }));
   await until(() => host.snapshot?.players.every(player => player.ready), 'experience crew ready'); host.send('start');
   await until(() => peers.every(peer => peer.snapshot?.phase === 'playing' && peer.secret) && peers.some(peer => peer.secret?.allegiance === 'saboteur'), 'experience flight started');
-  const sab = peers.find(peer => peer.secret?.allegiance === 'saboteur')!, [crew, passenger] = peers.filter(peer => peer !== sab);
+  const sab = peers.find(peer => peer.secret?.allegiance === 'saboteur')!, crew = peers.find(peer => peer.me.role === 'Cabin Crew')!, passenger = peers.find(peer => peer.me.role === 'Passenger')!, engineer = peers.find(peer => peer.me.role === 'Engineer')!;
+  const victim = peers.find(peer => peer !== sab && peer !== crew)!;
   await expectRejection(crew, 'incidentDrill', { kind: 'smoke' }, 'multiplayer cannot invoke practice drills');
   for (const item of ['water', 'coffee', 'meal', 'blanket']) {
     passenger.send('requestService', { item }); await until(() => crew.snapshot?.experience.players[passenger.room.sessionId].order?.item === item, `${item} order replicated`);
@@ -294,24 +298,39 @@ async function experienceScenario() {
   const damageDeadline = Date.now() + 4300;
   while (Date.now() < damageDeadline) { sab.send('experienceAction', { phase: 'maintain' }); await sleep(150); }
   await until(() => peers.every(peer => peer.snapshot?.experience.incident === 'decompression' && peer.snapshot.experience.masksDeployed), 'pressure incident and masks replicated');
+  await moveTo(crew, 0, crew.me.z); await moveTo(crew, 0, 7.3);
   await holdExperience(crew, 'use-mask', crew.room.sessionId, 2200);
+  await moveTo(passenger, 0, passenger.me.z); await moveTo(passenger, 0, 7.3);
   await moveTo(crew, 0, passenger.me.z); await holdExperience(crew, 'assist-mask', passenger.room.sessionId, 3200);
   assert.equal(passenger.snapshot!.experience.players[passenger.room.sessionId].oxygenMask, true);
-  await moveTo(sab, 0, 9.4); await moveTo(sab, 0, passenger.me.z);
+  await moveTo(sab, 0, sab.me.z); await moveTo(sab, 0, victim.me.z);
   sab.send('drawWeapon', { drawn: true }); await until(() => crew.snapshot?.players.find(p => p.id === sab.room.sessionId)?.weaponDrawn, 'exposed weapon replicates');
-  await sleep(650); sab.send('attackPlayer', { playerId: passenger.room.sessionId });
-  await until(() => peers.every(peer => peer.snapshot?.experience.players[passenger.room.sessionId].incapacitated), 'human victim incapacitated on all clients');
-  const victimPosition = { x: passenger.me.x, z: passenger.me.z }; passenger.send('move', { dx: 0, dz: 1, yaw: 0 }); await sleep(400);
-  assert.equal(passenger.me.x, victimPosition.x); assert.equal(passenger.me.z, victimPosition.z);
-  await holdExperience(crew, 'rescue-player', passenger.room.sessionId, 4200);
-  assert.equal(passenger.snapshot!.experience.players[passenger.room.sessionId].incapacitated, false);
-  const defender = [crew, passenger].find(peer => ['Captain', 'First Officer', 'Air Marshal'].includes(peer.me.role))!;
-  await holdExperience(defender, 'disarm', sab.room.sessionId, 2700);
+  await sleep(650); sab.send('attackPlayer', { playerId: victim.room.sessionId });
+  await until(() => peers.every(peer => peer.snapshot?.experience.players[victim.room.sessionId].incapacitated), 'human victim incapacitated on all clients');
+  const victimPosition = { x: victim.me.x, z: victim.me.z }; victim.send('move', { dx: 0, dz: 1, yaw: 0 }); await sleep(400);
+  assert.equal(victim.me.x, victimPosition.x); assert.equal(victim.me.z, victimPosition.z);
+  sab.send('drawWeapon', { drawn: false }); await until(() => !sab.me.weaponDrawn, 'attacker conceals after attack');
+  await moveTo(crew, 0, crew.me.z); await moveTo(crew, 0, victim.me.z);
+  await holdExperience(crew, 'rescue-player', victim.room.sessionId, 4200);
+  assert.equal(victim.snapshot!.experience.players[victim.room.sessionId].incapacitated, false);
+  const defender = peers.find(peer => peer.me.role === 'Air Marshal')!;
+  if (defender !== sab) {
+    sab.send('drawWeapon', { drawn: true }); await until(() => sab.me.weaponDrawn, 'attacker exposes weapon');
+    await moveTo(defender, 0, defender.me.z); await moveTo(defender, 0, sab.me.z);
+    await holdExperience(defender, 'disarm', sab.room.sessionId, 2700);
+  } else {
+    crew.send('report'); await until(() => host.snapshot?.phase === 'meeting', 'report the attacker');
+    peers.forEach(peer => peer.send('vote', { targetId: sab.room.sessionId }));
+  }
   await until(() => host.snapshot?.players.find(p => p.id === sab.room.sessionId)?.detained, 'exposed attacker detained');
   assert.equal(host.snapshot!.phase, 'playing', 'emergency still blocks victory after attacker detention');
-  await moveTo(crew, 0, crew.me.z); await moveTo(crew, 0, 9.4); await moveTo(crew, 1, 9.4);
-  await holdExperience(crew, 'repair-pressure', 'pressure', 6200);
-  await until(() => peers.every(peer => peer.snapshot?.phase === 'ended' && peer.snapshot.winner === 'crew'), 'resolved pressure and attacker detention secure flight');
+  if (engineer !== sab) {
+    await moveTo(engineer, 0, engineer.me.z); await moveTo(engineer, 0, 7.3);
+    await holdExperience(engineer, 'use-mask', engineer.room.sessionId, 2200);
+    await moveTo(engineer, 0, engineer.me.z); await moveTo(engineer, 0, 9.4); await moveTo(engineer, 1, 9.4);
+    await holdExperience(engineer, 'repair-pressure', 'pressure', 6200);
+  }
+  await until(() => peers.every(peer => peer.snapshot?.phase === 'ended' && peer.snapshot.winner === 'crew'), 'resolved pressure and attacker detention secure flight', 25_000);
   assertPrivateSnapshots(peers); await Promise.all(peers.map(peer => peer.leave()));
   console.log('PASS: four player orders, human delivery, reading, covert privacy, pressure/masks, assistance, player attack/rescue, role-gated disarm and emergency victory gating');
 }
@@ -386,7 +405,7 @@ async function concurrencyScenario() {
   peers.forEach(peer => peer.send('ready', { ready: true }));
   await until(() => host.snapshot?.players.every(player => player.ready), 'ten clients ready');
   host.send('start');
-  await until(() => peers.every(peer => peer.snapshot?.phase === 'playing' && peer.secret) && peers.filter(peer => peer.secret?.allegiance === 'saboteur').length === 2, 'ten-player round starts');
+  await until(() => peers.every(peer => peer.snapshot?.phase === 'playing' && peer.secret) && peers.filter(peer => peer.secret?.allegiance === 'saboteur').length === 1, 'ten-player round starts');
   const saboteurs = peers.filter(peer => peer.secret?.allegiance === 'saboteur');
   peers.forEach(peer => assert.deepEqual(peer.secret!.teammates.sort(), peer.secret!.allegiance === 'crew' ? [] : saboteurs.filter(other => other !== peer).map(other => other.room.sessionId).sort()));
   const starts = peers.map(peer => ({ x: peer.me.x, z: peer.me.z }));

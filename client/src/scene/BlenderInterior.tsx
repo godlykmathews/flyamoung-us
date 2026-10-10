@@ -2,14 +2,14 @@ import { useEffect, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import { MathUtils, Mesh, MeshStandardMaterial, type Object3D } from 'three';
-import { TASKS, type TaskId } from '../../../shared/world';
+import { EQUIPMENT_IDS, type EquipmentId } from '../../../shared/tasks';
 
 const ASSET_ROOT = '/models/interior/';
 type Vec3 = [number, number, number];
 
 // Models use meters and the existing collision world's origin: Y up, nose -Z.
 // These mounts deliberately remain independent of the server's task locations.
-const TASK_MOUNTS: Record<TaskId, { position: Vec3; rotation: Vec3 }> = {
+const TASK_MOUNTS: Record<EquipmentId, { position: Vec3; rotation: Vec3 }> = {
   checklist: { position: [-1.25, 1.63, -11.93], rotation: [0, 0, 0] },
   navigation: { position: [1.25, 1.65, -11.93], rotation: [0, 0, 0] },
   seatbelts: { position: [1.9, 1.16, -3.38], rotation: [0, 0, 0] },
@@ -76,7 +76,7 @@ function FixedEquipment() {
   return <primitive object={asset.object} dispose={null} />;
 }
 
-function TaskModel({ taskId, done }: { taskId: TaskId; done: boolean }) {
+function TaskModel({ taskId, done }: { taskId: EquipmentId; done: boolean }) {
   const asset = useInteriorAsset(taskId);
   useEffect(() => {
     asset.materials.forEach(material => {
@@ -104,6 +104,6 @@ export function BlenderInterior({ blackout, completedTasks }: { blackout: boolea
   return <group>
     <CabinStructure blackout={blackout} />
     <FixedEquipment />
-    {TASKS.map(task => <TaskModel key={task.id} taskId={task.id} done={completedTasks.includes(task.id)} />)}
+    {EQUIPMENT_IDS.map(id => <TaskModel key={id} taskId={id} done={completedTasks.includes(id)} />)}
   </group>;
 }

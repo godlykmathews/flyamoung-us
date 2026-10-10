@@ -6,7 +6,7 @@ import { SAFETY_DEMO_STATION } from '../shared/world.js';
 
 const order = SAFETY_INSTRUCTIONS.map(card => card.id);
 const demoDurationMs = SAFETY_STEP_DURATIONS.reduce((sum, duration) => sum + duration, 0) * 1000;
-function setup(count = 1) {
+function createSetup(count = 1) {
   let now = 0;
   const messages: Array<{ id: string; type: string; data: unknown }> = [];
   const game = new FlightGame('1234', count === 1, (id, type, data) => messages.push({ id, type, data }), () => now);
@@ -31,6 +31,14 @@ function setup(count = 1) {
   }
   const errors = () => messages.filter(message => message.type === 'error').map(message => (message.data as { message: string }).message);
   return { game, ids, step, walk, player, open, messages, errors };
+}
+
+function setup(count = 1, crewAllegiance?: 'crew' | 'saboteur') {
+  for (let i = 0; i < 100; i++) {
+    const h = createSetup(count);
+    if (!crewAllegiance || h.game.getSecret(h.game.snapshot().players.find(p => p.role === 'Cabin Crew')!.id).allegiance === crewAllegiance) return h;
+  }
+  throw new Error('Could not assign the required Cabin Crew fixture');
 }
 
 test('safety briefing requires proximity, a private challenge and the exact card order', () => {
@@ -73,7 +81,7 @@ test('safety arrangement cancels on request, walking away or timeout without cre
 });
 
 test('one presenter owns the private puzzle, and disconnect frees the station', () => {
-  const h = setup(3), [first, second] = h.ids;
+  const h = setup(8, 'crew'), [first, second] = h.game.snapshot().players.filter(p => p.role === 'Cabin Crew').map(p => p.id);
   const challenge = h.open(first); h.walk(second, 0, -8.6);
   h.game.handle(second, 'beginSafety', {}); assert.match(h.errors().at(-1)!, /Another crew/);
   h.game.handle(second, 'submitSafety', { token: challenge.token, order });
@@ -86,7 +94,7 @@ test('one presenter owns the private puzzle, and disconnect frees the station', 
 });
 
 test('meetings pause the demonstration, detention resets it, and a new flight resets completed safety', () => {
-  const h = setup(4), crew = h.ids.filter(id => h.game.getSecret(id).allegiance === 'crew'), operator = crew[0], reporter = crew[1];
+  const h = setup(8, 'crew'), [operator, reporter] = h.game.snapshot().players.filter(p => p.role === 'Cabin Crew').map(p => p.id);
   const challenge = h.open(operator); h.step(21000);
   h.game.handle(operator, 'submitSafety', { token: challenge.token, order }); h.step(1000);
   h.game.handle(reporter, 'report', {}); assert.equal(h.game.currentPhase, 'meeting');
@@ -102,8 +110,8 @@ test('meetings pause the demonstration, detention resets it, and a new flight re
   assert.equal(h.game.snapshot().story.objectives.find(goal => goal.id === 'safety-demo')!.current, 0);
 });
 
-test('concealed saboteurs can perform safety equally, but drawing a weapon cancels preparation', () => {
-  const h = setup(3), id = h.ids.find(id => h.game.getSecret(id).allegiance === 'saboteur')!;
+test('a concealed Cabin Crew saboteur can perform their public safety duty, but a drawn weapon cancels preparation', () => {
+  const h = setup(3, 'saboteur'), id = h.game.snapshot().players.find(p => p.role === 'Cabin Crew')!.id;
   h.open(id); h.game.handle(id, 'drawWeapon', { drawn: true }); assert.equal(h.game.snapshot().safety.status, 'idle');
   h.game.handle(id, 'beginSafety', {}); assert.equal(h.game.snapshot().safety.status, 'idle');
   h.step(650); h.game.handle(id, 'drawWeapon', { drawn: false });

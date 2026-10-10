@@ -2,10 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { FlightGame } from '../server/src/systems/game.js';
 import { CabinSimulation } from '../server/src/systems/cabin.js';
+import type { Role } from '../shared/protocol.js';
 import { assignRoles } from '../server/src/systems/roles.js';
 import { NPC_PASSENGER_SEATS, SERVICE_GALLEY, canStand, hasCabinSight } from '../shared/world.js';
 
-function harness(count = 3, training = false) {
+function harness(count = 3, training = false, loyalRole?: Role, attempts = 0) {
   let now = 0;
   const errors: string[] = [];
   const game = new FlightGame('NPC_TEST', training, (_id, type, value) => { if (type === 'error') errors.push((value as { message: string }).message); }, () => now);
@@ -23,7 +24,16 @@ function harness(count = 3, training = false) {
     game.handle(id, 'move', { dx: 0, dz: 0, yaw: 0 });
   }
   const reject = (id: string, type: string, data: unknown) => { const before = errors.length; game.handle(id, type, data); assert.equal(errors.length, before + 1, `${type} should reject`); };
-  return { game, ids, advance, moveTo, me, reject, errors };
+  const result = { game, ids, advance, moveTo, me, reject, errors };
+  const start = (): typeof result => {
+    game.handle(ids[0], 'start', {});
+    if (loyalRole && game.getSecret(game.snapshot().players.find(p => p.role === loyalRole)!.id).allegiance !== 'crew') {
+      assert.ok(attempts < 100);
+      return harness(count, training, loyalRole, attempts + 1).start();
+    }
+    return result;
+  };
+  return { game, ids, advance, moveTo, me, reject, errors, start };
 }
 
 test('cabin has 12 seated passengers and a pilot; AI walks valid aisle routes and serves requests', () => {
@@ -92,7 +102,7 @@ test('passenger service validates galley proximity, item, current request, dista
 });
 
 test('kill and covert objectives remain private, proximity gated, single-use and cooldown limited', () => {
-  const { game, ids, advance, moveTo, reject } = harness(); game.handle(ids[0], 'start', {});
+  const { game, ids, advance, moveTo, reject } = harness().start();
   const sab = ids.find(id => game.getSecret(id).allegiance === 'saboteur')!, crew = ids.find(id => id !== sab)!;
   reject(crew, 'killNpc', { npcId: 'passenger-01' }); reject(crew, 'impostorTask', { taskId: 'tamper-galley' });
   reject(sab, 'killNpc', { npcId: 'passenger-01' });
@@ -121,7 +131,7 @@ test('kill and covert objectives remain private, proximity gated, single-use and
 });
 
 test('pilot kill leaves autopilot running; meetings pause NPC service and reject physical actions', () => {
-  const { game, ids, advance, moveTo, reject } = harness(); game.handle(ids[0], 'start', {});
+  const { game, ids, advance, moveTo, reject } = harness(3, false, 'Cabin Crew').start();
   const sab = ids.find(id => game.getSecret(id).allegiance === 'saboteur')!;
   advance(10100); moveTo(sab, 0, -9.6); moveTo(sab, -1.65, -9.6);
   assert.equal(hasCabinSight({ x: -1.65, z: -9.6 }, { x: -1.65, z: -11.05 }), false);
@@ -137,7 +147,7 @@ test('pilot kill leaves autopilot running; meetings pause NPC service and reject
   reject(sab, 'servePassenger', { npcId: 'passenger-01', requestId: 'stale' }); reject(sab, 'impostorTask', { taskId: 'tamper-galley' });
   for (const id of ids) game.handle(id, 'vote', { targetId: sab });
   assert.equal(game.currentPhase, 'playing', 'detention cannot skip the pilot rescue');
-  const rescuer = ids.find(id => id !== sab)!;
+  const rescuer = game.snapshot().players.find(p => p.role === 'Cabin Crew')!.id;
   moveTo(rescuer, 0, -11.05); moveTo(rescuer, -.6, -11.05);
   game.handle(rescuer, 'experienceAction', { phase: 'begin', kind: 'aid-pilot', targetId: 'pilot' });
   for (let i = 0; i < 102; i++) { game.handle(rescuer, 'experienceAction', { phase: 'maintain' }); advance(50); }
@@ -153,18 +163,18 @@ test('three-player public roles guarantee a cabin attendant appearance independe
     const cabinCrew = game.snapshot().players.filter(p => p.role === 'Cabin Crew');
     assert.equal(cabinCrew.length, 1); assert.equal(cabinCrew[0].model, 'attendant-player');
     assert.equal(game.snapshot().players.filter(p => p.model === 'pilot').length, 1);
-    assert.equal(game.snapshot().players.filter(p => p.role === 'Air Marshal' && p.model === 'marshal').length, 1);
+    assert.equal(game.snapshot().players.filter(p => p.role === 'Engineer' && p.model === 'engineer').length, 1);
     assert.ok(game.snapshot().players.every(p => !p.weaponDrawn));
   }
   assert.equal([...assignRoles(['a', 'b', 'c'], false).values()].filter(a => a.allegiance === 'saboteur').length, 1);
 });
 
-test('detained saboteurs cannot use service, kills or private assignments after play resumes', () => {
+test('detaining the only saboteur ends the round and rejects later physical actions', () => {
   const { game, ids, advance, reject } = harness(8); game.handle(ids[0], 'start', {});
   const sab = ids.find(id => game.getSecret(id).allegiance === 'saboteur')!;
   advance(20100); game.handle(ids[0], 'report', {});
   for (const id of ids) game.handle(id, 'vote', { targetId: sab });
-  assert.equal(game.currentPhase, 'playing'); assert.equal(game.snapshot().players.find(p => p.id === sab)!.detained, true);
+  assert.equal(game.currentPhase, 'ended'); assert.equal(game.snapshot().winner, 'crew'); assert.equal(game.snapshot().players.find(p => p.id === sab)!.detained, true);
   reject(sab, 'killNpc', { npcId: 'attendant-1' }); reject(sab, 'pickUpService', { item: 'water' });
   reject(sab, 'servePassenger', { npcId: 'passenger-01', requestId: 'stale' }); reject(sab, 'impostorTask', { taskId: 'tamper-galley' });
   assert.ok(game.snapshot().npcs.every(n => n.alive)); assert.ok(game.getSecret(sab).objectives.every(o => !o.completed));

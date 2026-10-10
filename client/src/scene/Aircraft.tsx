@@ -1,6 +1,8 @@
 import { Component, Suspense, useEffect, useLayoutEffect, useMemo, useRef, type ReactNode } from 'react';
 import * as THREE from 'three';
-import { SEAT_ROWS, TASKS } from '../../../shared/world';
+import { SEAT_ROWS } from '../../../shared/world';
+import { EQUIPMENT_IDS, type EquipmentId } from '../../../shared/tasks';
+import { RoleCheckStations } from './RoleCheckStations';
 import { TaskEquipment } from './TaskEquipment';
 import { BlenderInterior } from './BlenderInterior';
 
@@ -172,15 +174,15 @@ function AftCabin() {
 }
 function TaskStations({completedTasks}: {completedTasks:string[]}) {
  // Mounts remain inside the existing console, seat and galley collision footprints.
- const mounts: Record<typeof TASKS[number]['id'], {position:Vec3;rotation:Vec3}> = {
+ const mounts: Record<EquipmentId, {position:Vec3;rotation:Vec3}> = {
   checklist: {position:[-1.25,1.63,-11.93],rotation:[0,0,0]},
   navigation: {position:[1.25,1.65,-11.93],rotation:[0,0,0]},
   seatbelts: {position:[1.9,1.16,-3.38],rotation:[0,0,0]},
   meals: {position:[-2.74,1.175,9.4],rotation:[0,Math.PI/2,0]},
   electrical: {position:[2.457,1.41,12.3],rotation:[0,-Math.PI/2,0]},
  };
- return <group>{TASKS.map(task=><group key={task.id} {...mounts[task.id]}>
-  <TaskEquipment taskId={task.id} done={completedTasks.includes(task.id)}/>
+ return <group>{EQUIPMENT_IDS.map(id=><group key={id} {...mounts[id]}>
+  <TaskEquipment taskId={id} done={completedTasks.includes(id)}/>
  </group>)}</group>;
 }
 
@@ -197,9 +199,9 @@ class InteriorBoundary extends Component<{children:ReactNode;fallback:ReactNode}
 
 export function Aircraft({blackout=false,completedTasks=[]}: {blackout?:boolean;completedTasks?:string[]}) {
  const fallback=<ProceduralAircraft blackout={blackout} completedTasks={completedTasks}/>;
- return <InteriorBoundary fallback={fallback}><Suspense fallback={fallback}>
+ return <group><RoleCheckStations completedTasks={completedTasks}/><InteriorBoundary fallback={fallback}><Suspense fallback={fallback}>
   <BlenderInterior blackout={blackout} completedTasks={completedTasks}/>
- </Suspense></InteriorBoundary>;
+ </Suspense></InteriorBoundary></group>;
 }
 
 function wingGeometry(side:number, rear=false) {

@@ -3,10 +3,10 @@ import assert from 'node:assert/strict';
 import { ExperienceSimulation } from '../server/src/systems/experience.js';
 import { CabinSimulation } from '../server/src/systems/cabin.js';
 import { FlightGame } from '../server/src/systems/game.js';
-import { EXPERIENCE_ACTION_DURATIONS, type ExperienceActionKind, type ServiceItem, type Player } from '../shared/protocol.js';
+import { EXPERIENCE_ACTION_DURATIONS, type ExperienceActionKind, type ServiceItem, type Player, type Role } from '../shared/protocol.js';
 import { NPC_PASSENGER_SEATS, canStand } from '../shared/world.js';
 
-function harness(count = 1) {
+function createHarness(count = 1) {
   let now = 0;
   const errors: Array<{ id: string; message: string }> = [];
   const game = new FlightGame('0420', count === 1, (id, type, payload) => { if (type === 'error') errors.push({ id, message: (payload as { message: string }).message }); }, () => now);
@@ -30,6 +30,14 @@ function harness(count = 1) {
   }
   function reject(id: string, type: string, payload: unknown) { const n = errors.length; game.handle(id, type, payload); assert.equal(errors.length, n + 1, `${type} should reject`); }
   return { game, ids, step, me, state, walk, hold, reject, errors };
+}
+
+function harness(count = 1, loyalRole?: Role) {
+  for (let i = 0; i < 100; i++) {
+    const h = createHarness(count);
+    if (!loyalRole || h.game.getSecret(h.game.snapshot().players.find(p => p.role === loyalRole)!.id).allegiance === 'crew') return h;
+  }
+  throw new Error('Could not assign the required loyal role fixture');
 }
 
 test('incident drills are training-only and cannot stack or reset active incident countdowns', () => {
@@ -91,7 +99,8 @@ test('all four unique items can be requested and physically delivered by the att
 });
 
 test('human crew deliveries validate recipient, current request, matching item and proximity', () => {
-  const h = harness(3), [crew, passenger] = h.ids;
+  const h = harness(6), crew = h.game.snapshot().players.find(p => p.role === 'Cabin Crew')!.id, passenger = h.game.snapshot().players.find(p => p.role === 'Passenger')!.id;
+  h.walk(passenger, 0, -7.5);
   h.game.handle(passenger, 'requestService', { item: 'coffee' }); const order = h.state().players[passenger].order!;
   h.reject(crew, 'servePlayer', { playerId: passenger, requestId: order.id });
   h.walk(crew, 0, 9.4); h.walk(crew, -1.4, 9.4); h.game.handle(crew, 'pickUpService', { item: 'coffee' });
@@ -118,7 +127,7 @@ test('reading, resting and seatbelts require cabin time and release on movement'
 });
 
 test('covert damage is private, held, proximity gated and cooldown limited; meetings pause incidents', () => {
-  const h = harness(3), sab = h.ids.find(id => h.game.getSecret(id).allegiance === 'saboteur')!, crew = h.ids.find(id => id !== sab)!;
+  const h = harness(6, 'Engineer'), sab = h.ids.find(id => h.game.getSecret(id).allegiance === 'saboteur')!, crew = h.game.snapshot().players.find(p => p.role === 'Engineer')!.id;
   h.step(15100); h.walk(sab, 0, 9.4); h.walk(sab, 1, 9.4); h.walk(crew, 0, 9.4); h.walk(crew, 1, 9.4);
   h.reject(crew, 'experienceAction', { phase: 'begin', kind: 'damage-pressure', targetId: 'pressure' });
   h.game.handle(sab, 'experienceAction', { phase: 'begin', kind: 'damage-pressure', targetId: 'pressure' }); h.step(300);
@@ -126,7 +135,7 @@ test('covert damage is private, held, proximity gated and cooldown limited; meet
   assert.ok(!JSON.stringify(h.game.snapshot()).includes('damage-pressure'));
   h.step(3800, () => h.game.handle(sab, 'experienceAction', { phase: 'maintain' })); assert.equal(h.state().incident, 'decompression');
   h.reject(sab, 'experienceAction', { phase: 'begin', kind: 'damage-electrical', targetId: 'electrical' });
-  h.game.handle(crew, 'requestService', { item: 'meal' });
+  h.game.handle(h.game.snapshot().players.find(p => p.role === 'Passenger')!.id, 'requestService', { item: 'meal' });
   h.game.handle(crew, 'report', {}); assert.equal(h.game.currentPhase, 'meeting');
   const before = h.state(); h.step(3000); assert.deepEqual(h.state(), before, 'incident, order countdown and mask state freeze in meetings');
   h.game.removePlayer(sab); assert.equal(h.game.currentPhase, 'meeting', 'disconnect cannot skip incident resolution');
@@ -137,7 +146,7 @@ test('covert damage is private, held, proximity gated and cooldown limited; meet
 });
 
 test('wrong deliveries agitate the exact passenger and nearby crew can calm them', () => {
-  const h = harness(3), sab = h.ids.find(id => h.game.getSecret(id).allegiance === 'saboteur')!, crew = h.ids.find(id => id !== sab)!;
+  const h = harness(3, 'Cabin Crew'), sab = h.ids.find(id => h.game.getSecret(id).allegiance === 'saboteur')!, crew = h.game.snapshot().players.find(p => p.role === 'Cabin Crew')!.id;
   h.step(15100); const npc = h.game.snapshot().npcs.find(n => n.request)!; assert.ok(npc.request);
   const seat = NPC_PASSENGER_SEATS.find(s => s.id === npc.id)!;
   const wrong = npc.request.item === 'water' ? 'coffee' : 'water';
@@ -150,7 +159,7 @@ test('wrong deliveries agitate the exact passenger and nearby crew can calm them
 });
 
 test('pilot tampering needs a carried drink and clear nearby access, then first aid restores the pilot', () => {
-  const h = harness(3), sab = h.ids.find(id => h.game.getSecret(id).allegiance === 'saboteur')!, crew = h.ids.find(id => id !== sab)!;
+  const h = harness(3, 'Cabin Crew'), sab = h.ids.find(id => h.game.getSecret(id).allegiance === 'saboteur')!, crew = h.game.snapshot().players.find(p => p.role === 'Cabin Crew')!.id;
   h.step(15100); h.reject(sab, 'experienceAction', { phase: 'begin', kind: 'poison-pilot', targetId: 'pilot' });
   h.walk(sab, 0, 9.4); h.walk(sab, -1.4, 9.4); h.game.handle(sab, 'pickUpService', { item: 'water' });
   h.walk(sab, 0, 9.4); h.walk(sab, 0, -9.6); h.walk(sab, -1.65, -9.6);
@@ -162,7 +171,7 @@ test('pilot tampering needs a carried drink and clear nearby access, then first 
 });
 
 test('visible player attacks require draw time, range and cooldown; victims are immobile until held rescue', () => {
-  const h = harness(3), sab = h.ids.find(id => h.game.getSecret(id).allegiance === 'saboteur')!, [victim, rescuer] = h.ids.filter(id => id !== sab);
+  const h = harness(6, 'Cabin Crew'), sab = h.ids.find(id => h.game.getSecret(id).allegiance === 'saboteur')!, rescuer = h.game.snapshot().players.find(p => p.role === 'Cabin Crew')!.id, victim = h.ids.find(id => id !== sab && id !== rescuer)!;
   h.step(10100); h.walk(sab, 0, 4); h.walk(victim, 0, 4.8);
   h.reject(victim, 'attackPlayer', { playerId: sab }); h.reject(sab, 'attackPlayer', { playerId: victim });
   h.game.handle(sab, 'drawWeapon', { drawn: true }); h.reject(sab, 'attackPlayer', { playerId: victim }); h.step(650);
@@ -174,10 +183,10 @@ test('visible player attacks require draw time, range and cooldown; victims are 
   h.reject(sab, 'attackPlayer', { playerId: victim }); h.walk(victim, 0, 5.8);
 });
 
-test('captain or marshal can detain an exposed attacker with a held nearby intervention', () => {
-  const h = harness(6), sab = h.ids.find(id => h.game.getSecret(id).allegiance === 'saboteur')!;
-  const defender = h.game.snapshot().players.find(p => p.id !== sab && ['Captain', 'First Officer', 'Air Marshal'].includes(p.role))!.id;
-  const civilian = h.game.snapshot().players.find(p => p.id !== sab && !['Captain', 'First Officer', 'Air Marshal'].includes(p.role))!.id;
+test('only the marshal can detain an exposed attacker with a held nearby intervention', () => {
+  const h = harness(6, 'Air Marshal'), sab = h.ids.find(id => h.game.getSecret(id).allegiance === 'saboteur')!;
+  const defender = h.game.snapshot().players.find(p => p.role === 'Air Marshal')!.id;
+  const civilian = h.game.snapshot().players.find(p => p.id !== sab && p.role !== 'Air Marshal')!.id;
   h.walk(sab, 0, 4); h.walk(defender, 0, 4.5); h.walk(civilian, 0, 4.5);
   h.reject(defender, 'experienceAction', { phase: 'begin', kind: 'disarm', targetId: sab });
   h.game.handle(sab, 'drawWeapon', { drawn: true }); h.step(650);

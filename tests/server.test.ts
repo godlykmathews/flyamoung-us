@@ -19,11 +19,17 @@ function setup(count = 3, training = false) {
   return { game, ids, events, advance, move };
 }
 
-test('roles have independent private assignments and expected saboteur counts', () => {
-  for (const count of [3, 7, 8, 10]) {
+test('roles preserve core specialties and exactly one hidden saboteur at every multiplayer size', () => {
+  for (const count of [3, 4, 5, 6, 7, 8, 9, 10]) {
     const assignments = assignRoles(Array.from({ length: count }, (_, i) => String(i)), false);
-    assert.equal([...assignments.values()].filter(p => p.allegiance === 'saboteur').length, count >= 8 ? 2 : 1);
+    assert.equal([...assignments.values()].filter(p => p.allegiance === 'saboteur').length, 1);
     assert.equal([...assignments.values()].filter(p => p.role === 'Captain').length, 1);
+    assert.equal([...assignments.values()].filter(p => p.role === 'Cabin Crew').length, 1 + Math.max(0, Math.floor((count - 6) / 2)));
+    if (count >= 6) assert.equal(new Set([...assignments.values()].map(p => p.role)).size, 6);
+    assert.equal([...assignments.values()].filter(p => p.role === 'Engineer').length, 1);
+    assert.equal([...assignments.values()].filter(p => p.role === 'Air Marshal').length, count >= 4 ? 1 : 0);
+    assert.equal([...assignments.values()].filter(p => p.role === 'First Officer').length, count >= 5 ? 1 : 0);
+    assert.ok([...assignments.values()].every(p => p.role !== ('Terrorist' as string)), 'allegiance never becomes a public role');
   }
   assert.equal(assignRoles(['solo'], true).get('solo')?.allegiance, 'crew');
 });

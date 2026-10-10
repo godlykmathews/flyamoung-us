@@ -1,8 +1,18 @@
 # Prototype validation
 
+## Exclusive roles and flight checks — 11 October 2026
+
+- `npm test`: **84 tests pass**. New coverage checks exactly one hidden terrorist, three distinct stations per role, permission checks at start and completion, stolen challenge tokens, forged public roles, held-action permission changes, service pickup versus delivery, private safety preparation, early check completion and unavailable-role reserve coverage.
+- Emergency voting regressions cover a hostile Engineer blocking a blackout repair and a hostile First Officer blocking comms: meetings remain available, emergency clocks pause, discussion works, and reserve crew repair after detention without unlocking another player's duties.
+- All four live Colyseus integration scenarios pass against an isolated server on port 2571: multiplayer roles/service/safety/sabotage/voting; the complete solo journey; six-player orders, masks, rescue and role-specific emergency response; and ten-client movement/privacy/disconnect. Temporary rooms, clients and the isolated server were closed afterward.
+- `npm run build` passes the client typecheck, Vite production build and Node server compilation. Vite retains its existing large-bundle advisory.
+- Server-rendered UI smoke checks pass all six roles and training: three own-role checks, exclusive passenger/service/yoke/disarm controls, shared personal safety, private covert supplies, and all 18 station panels render with their labels.
+- Headless simulations with actual walking, held actions and task challenges completed cooperative journeys with 3–10 players in 101–114 simulated seconds. Separate runs completed after losing Captain, Cabin Crew, Engineer or First Officer, and with navigation/comms sabotage when no First Officer was assigned. These verify game progression, not human play speed or GPU performance.
+- Added role-specific cabin markers, small mounted check terminals and packing/matching/dial panels. The original five Blender equipment models are still loaded only by their five valid asset IDs; new checks do not request nonexistent GLBs.
+
 ## Flight incidents and passenger experience — 11 October 2026
 
-This is the current milestone. Earlier sections preserve the evidence and test totals recorded for their original builds.
+This earlier milestone records the incident feature and its original test totals.
 
 ### Completed automated verification
 

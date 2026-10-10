@@ -62,5 +62,5 @@ test('every task has a reachable position in its interaction radius', () => {
     }
     assert.equal(reachable, true, `no reachable interaction point for ${task.id}`);
   }
-  assert.equal(nearestTask(0, 2), undefined);
+  assert.equal(nearestTask(0, 100), undefined);
 });

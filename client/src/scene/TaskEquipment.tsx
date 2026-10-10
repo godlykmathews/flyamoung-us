@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
-import type { TaskId } from '../../../shared/world';
+import type { EquipmentId } from '../../../shared/tasks';
 
 type Vec3 = [number, number, number];
 const block = new RoundedBoxGeometry(1, 1, 1, 2, .075);
@@ -209,7 +209,7 @@ function CircuitPanel({ done }: { done: boolean }) {
 }
 
 /** Original modular station art. Replace individual variants with GLBs at these same mounts. */
-export function TaskEquipment({ taskId, done }: { taskId: TaskId; done: boolean }) {
+export function TaskEquipment({ taskId, done }: { taskId: EquipmentId; done: boolean }) {
   if (taskId === 'checklist') return <CrewClipboard done={done} />;
   if (taskId === 'navigation') return <FlightManagementUnit done={done} />;
   if (taskId === 'seatbelts') return <SeatbeltInspection done={done} />;

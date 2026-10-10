@@ -4,6 +4,7 @@ import { Euler, MathUtils, Quaternion, Vector3 } from 'three';
 import { session } from '../network/session';
 import { input } from '../game/input';
 import { EYE_HEIGHT, movePlayer, nearestTask, areaAt } from '../../../shared/world';
+import { canDoTask } from '../../../shared/duties';
 import type { Phase } from '../../../shared/protocol';
 
 function stopMovement() {
@@ -76,7 +77,13 @@ export function Controls({enabled,onNearby,onArea,onLock,turbulence=0,cameraOver
   targetRotation.current.setFromEuler(euler.current);camera.quaternion.slerp(targetRotation.current,1-Math.exp(-30*Math.min(delta,.1)));
   timer.current+=delta;uiTimer.current+=delta;
   if(timer.current>0.05){timer.current=0;if(canMove)session.send('move',{dx,dz,yaw:input.yaw});}
-  if(uiTimer.current>0.15){uiTimer.current=0;onNearby(nearestTask(input.x,input.z)?.id??null);onArea(areaAt(input.z));}
+  if(uiTimer.current>0.15){
+   uiTimer.current=0;
+   const repairId=snapshot.sabotage?{blackout:'electrical',comms:'radio',navigation:'navigation'}[snapshot.sabotage]:null;
+   const task=nearestTask(input.x,input.z, station=>canDoTask(me.role,station.id,snapshot.training)
+    && (station.id===repairId||!snapshot.tasks.find(state=>state.id===station.id)?.completed));
+   onNearby(task?.id??null);onArea(areaAt(input.z));
+  }
  });
  return null;
 }

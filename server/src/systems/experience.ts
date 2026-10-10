@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
-import { EXPERIENCE_ACTION_DURATIONS, type ExperienceAction, type ExperienceActionKind, type ExperienceState, type IncidentKind, type PassengerExperience, type Player, type ServiceItem } from '../../../shared/protocol.js';
+import { EXPERIENCE_ACTION_DURATIONS, type ExperienceAction, type ExperienceActionKind, type ExperienceState, type IncidentKind, type PassengerExperience, type Player, type Role, type ServiceItem } from '../../../shared/protocol.js';
 import { EXPERIENCE_STATIONS, hasCabinSight } from '../../../shared/world.js';
+import { canPerformDuty } from '../../../shared/duties.js';
 import { CabinSimulation, SERVICE_ITEMS } from './cabin.js';
 
 type Payload = Record<string, unknown>;
@@ -57,6 +58,8 @@ export class ExperienceSimulation {
   request(id: string, item: unknown) {
     const member = this.member(id);
     if (!this.port.playing() || !this.port.canAct(id) || !member) return;
+    const player = this.player(id);
+    if (!player || !canPerformDuty(player.role, 'request-service', this.port.training)) return this.port.error(id, 'Passenger orders are a Passenger activity. Follow your assigned crew duties.');
     if (!SERVICE_ITEMS.includes(item as ServiceItem)) return this.port.error(id, 'Choose water, coffee, a meal or a blanket.');
     if (member.order) return this.port.error(id, 'Your current order is on its way.');
     if (member.received.includes(item as ServiceItem)) return this.port.error(id, 'Try another item to complete your four-item journey.');
@@ -66,6 +69,7 @@ export class ExperienceSimulation {
     const player = this.player(id), target = typeof data.playerId === 'string' ? this.player(data.playerId) : undefined;
     const member = target && this.member(target.id);
     if (!this.port.playing() || !player || !target || !this.port.canAct(id) || player.weaponDrawn || id === target.id || target.detained || !member?.order || member.order.id !== data.requestId) return this.port.error(id, 'Choose another passenger with a current request.');
+    if (!canPerformDuty(player.role, 'service', this.port.training)) return this.port.error(id, 'Cabin Crew deliver passenger orders.');
     if (!this.near(player, target, 2.4)) return this.port.error(id, 'Carry the requested item to the passenger.');
     if (player.carriedItem !== member.order.item) return this.port.error(id, 'Bring the item shown on their request.');
     this.deliver(target.id, member.order.id); player.carriedItem = null; this.port.creditService();
@@ -77,6 +81,29 @@ export class ExperienceSimulation {
   /** Read-only routing input for the cabin attendant. Human crew retain the first 20 seconds. */
   serviceTargets() { return this.port.players().filter(p => !p.detained && !this.member(p.id)?.incapacitated).flatMap(p => { const order = this.member(p.id)?.order; return order ? [{ id: p.id, x: p.x, z: p.z, request: { ...order } }] : []; }); }
   setClaim(id: string, requestId: string, claimedBy: string | null) { const order = this.member(id)?.order; if (order?.id === requestId) order.claimedBy = claimedBy; }
+  /** Called only after FlightGame verifies that this public role has no available
+   * human operator. Reserve assistance never changes another player's permissions. */
+  coverRole(role: Role) {
+    const work: string[] = [];
+    if (role === 'Engineer' && this.state.incident !== 'none') {
+      work.push(this.state.incident === 'decompression' ? 'restored cabin pressure' : 'contained cabin smoke');
+      this.incidentRevision++; this.state.incident = 'none'; this.state.remaining = 0; this.state.severity = 0; this.state.masksDeployed = false;
+      for (const member of Object.values(this.state.players)) member.oxygenMask = false;
+    }
+    if (role === 'Cabin Crew') {
+      if (this.state.pilotCondition === 'poisoned' || !this.port.cabin.get('pilot')?.alive) {
+        this.port.cabin.revive('pilot'); this.state.pilotCondition = 'recovering'; this.state.pilotRecovery = 5; work.push('assisted the pilot');
+      }
+      const injured = Object.values(this.state.players).filter(member => member.incapacitated);
+      for (const member of injured) member.incapacitated = false;
+      if (injured.length) work.push('assisted injured occupants');
+      if (this.state.agitated.length) {
+        for (const id of this.state.agitated) this.port.cabin.guideToSeat(id);
+        this.state.agitated = []; work.push('calmed upset passengers');
+      }
+    }
+    return work;
+  }
   trigger(kind: Exclude<IncidentKind, 'none'>) {
     if (this.state.incident !== 'none') return false;
     this.incidentRevision++; this.state.incident = kind; this.state.remaining = 85; this.state.severity = .2; this.state.masksDeployed = kind === 'decompression';
@@ -96,6 +123,7 @@ export class ExperienceSimulation {
     const player = this.player(id), member = this.member(id);
     if (!this.port.playing() || !player || !member || !this.port.canAct(id) || player.weaponDrawn || !(kind in EXPERIENCE_ACTION_DURATIONS)) return false;
     if (covertKinds.includes(kind) && (!this.port.saboteur(id) || !this.port.covertReady(id))) return false;
+    if (!covertKinds.includes(kind) && !canPerformDuty(player.role, kind, this.port.training)) return false;
     const targetPlayer = this.player(targetId), targetMember = this.member(targetId), npc = this.port.cabin.get(targetId);
     switch (kind) {
       case 'fasten-seatbelt': case 'read': case 'rest': return targetId === id && player.z > -9 && player.z < 8 && (kind !== 'fasten-seatbelt' || !member.seatbelt);
@@ -105,7 +133,7 @@ export class ExperienceSimulation {
       case 'extinguish-smoke': return targetId === 'electrical' && this.state.incident === 'smoke' && this.near(player, EXPERIENCE_STATIONS.electrical);
       case 'aid-pilot': return targetId === 'pilot' && (this.state.pilotCondition === 'poisoned' || !this.port.cabin.get('pilot')?.alive) && this.near(player, EXPERIENCE_STATIONS.pilot);
       case 'rescue-player': return !!targetPlayer && !targetPlayer.detained && !!targetMember?.incapacitated && this.near(player, targetPlayer);
-      case 'disarm': return !!targetPlayer && targetId !== id && !targetPlayer.detained && targetPlayer.weaponDrawn && this.near(player, targetPlayer, 1.9) && (this.port.training || ['Captain', 'First Officer', 'Air Marshal'].includes(player.role));
+      case 'disarm': return !!targetPlayer && targetId !== id && !targetPlayer.detained && targetPlayer.weaponDrawn && this.near(player, targetPlayer, 1.9);
       case 'wrong-order': return !!npc?.alive && npc.kind === 'passenger' && !!npc.request && !!player.carriedItem && player.carriedItem !== npc.request.item && this.near(player, npc, 2.4);
       case 'calm-passenger': return !!npc?.alive && this.state.agitated.includes(targetId) && this.near(player, npc, 2.4);
       case 'poison-pilot': return targetId === 'pilot' && this.state.pilotCondition === 'healthy' && !!this.port.cabin.get('pilot')?.alive && (player.carriedItem === 'water' || player.carriedItem === 'coffee') && this.near(player, EXPERIENCE_STATIONS.pilot);
@@ -116,7 +144,7 @@ export class ExperienceSimulation {
   action(id: string, data: Payload) {
     if (data.phase === 'cancel') { this.cancel(id); return; }
     if (data.phase === 'maintain') { const action = this.actions.get(id); if (action && this.port.playing()) action.lastAt = this.port.now(); return; }
-    if (data.phase !== 'begin' || typeof data.kind !== 'string' || typeof data.targetId !== 'string' || !this.valid(id, data.kind as ExperienceActionKind, data.targetId)) return this.port.error(id, 'Move close to an available activity. Pressure repairs require your oxygen mask; covert actions require the hidden saboteur role.');
+    if (data.phase !== 'begin' || typeof data.kind !== 'string' || typeof data.targetId !== 'string' || !this.valid(id, data.kind as ExperienceActionKind, data.targetId)) return this.port.error(id, 'Choose a nearby activity assigned to your role. Pressure repairs require your oxygen mask; covert actions require the hidden Terrorist allegiance.');
     const player = this.player(id)!; if (this.actions.has(id)) return;
     this.actions.set(id, { playerId: id, kind: data.kind as ExperienceActionKind, targetId: data.targetId, progress: 0, duration: EXPERIENCE_ACTION_DURATIONS[data.kind as ExperienceActionKind], lastAt: this.port.now(), x: player.x, z: player.z, requestId: data.kind === 'wrong-order' ? this.port.cabin.get(data.targetId)?.request?.id ?? null : null, incidentRevision: this.incidentRevision });
   }

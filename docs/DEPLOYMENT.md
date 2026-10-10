@@ -90,6 +90,7 @@ Vercel's [WebSocket support in Functions](https://vercel.com/docs/functions/webs
 2. In the browser's Network panel, verify matchmaking requests go to the backend and the room WebSocket connects successfully.
 3. Confirm the start page shows **FLIGHT 404**, **Trust your crew.**, and **Solo practice**, with the light airline theme and aircraft model.
 4. Check the frontend's `/models/boeing-737.glb`, `/models/interior/aircraft-cabin.glb` and `/voice/manifest.json` return their actual files. A `.glb` response must be binary model data, not HTML. Hashed JavaScript and CSS URLs linked by the page must also succeed.
+5. Start a three-player flight: confirm Captain, Cabin Crew and Engineer assignments, exactly one private terrorist reveal, and three checks per role in **Tasks**. Other roles’ duties should appear only in the read-only team checklist. Solo practice should still expose all duties. This update requires both frontend and backend to finish deploying before testing.
 
 ## Troubleshooting
 
