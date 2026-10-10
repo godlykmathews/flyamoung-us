@@ -1,4 +1,5 @@
 import type { FormEvent } from 'react';
+import type { SessionState } from '../network/session';
 import './start-page.css';
 
 interface StartPageProps {
@@ -9,11 +10,17 @@ interface StartPageProps {
   joining: boolean;
   setJoining: (joining: boolean) => void;
   busy: boolean;
+  connectionStatus: SessionState['connectionStatus'];
   onConnect: (mode: 'create' | 'join' | 'training') => void;
+  onCancelConnection: () => void;
   onHelp: () => void;
 }
 
-export function StartPage({ name, setName, code, setCode, joining, setJoining, busy, onConnect, onHelp }: StartPageProps) {
+export function StartPage({ name, setName, code, setCode, joining, setJoining, busy, connectionStatus, onConnect, onCancelConnection, onHelp }: StartPageProps) {
+  const busyLabel = connectionStatus === 'waking' ? 'Waking server…' : connectionStatus === 'boarding' ? 'Boarding…' : 'Connecting…';
+  const statusMessage = connectionStatus === 'waking'
+    ? 'Waking flight server… This can take about a minute.'
+    : connectionStatus === 'boarding' ? 'Preparing your flight…' : 'Connecting to flight server…';
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!busy && (!joining || /^\d{4}$/.test(code))) onConnect(joining ? 'join' : 'create');
@@ -63,7 +70,7 @@ export function StartPage({ name, setName, code, setCode, joining, setJoining, b
 
           <div className="start-actions">
             <button className="start-primary" type="submit" disabled={busy || (joining && !/^\d{4}$/.test(code))}>
-              {busy ? 'Connecting…' : joining ? 'Join flight' : 'Create flight'}
+              {busy ? busyLabel : joining ? 'Join flight' : 'Create flight'}
             </button>
             <button className="start-secondary" type="button" onClick={() => setJoining(!joining)} disabled={busy}>
               {joining ? 'Cancel' : 'Join flight'}
@@ -71,6 +78,14 @@ export function StartPage({ name, setName, code, setCode, joining, setJoining, b
           </div>
           <button className="start-solo" type="button" onClick={() => onConnect('training')} disabled={busy}>Solo practice</button>
         </form>
+        {busy && (
+          <div className="start-connection">
+            <p role="status" aria-live="polite" aria-atomic="true">{statusMessage}</p>
+            {(connectionStatus === 'connecting' || connectionStatus === 'waking') && (
+              <button className="start-cancel-connection" type="button" onClick={onCancelConnection}>Cancel connection</button>
+            )}
+          </div>
+        )}
       </div>
       <button className="start-controls" type="button" onClick={onHelp}>Controls</button>
     </section>

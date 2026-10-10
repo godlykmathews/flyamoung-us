@@ -140,10 +140,30 @@
 }
 
 .start-solo:hover:not(:disabled),
+.start-cancel-connection:hover,
 .start-controls:hover {
   color: #203247;
   text-decoration: underline;
   text-underline-offset: 4px;
+}
+
+.start-connection {
+  margin-top: 10px;
+  color: #607184;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.start-connection p {
+  margin: 0;
+}
+
+.start-cancel-connection {
+  min-height: 32px;
+  padding: 6px 0;
+  color: #466982;
+  background: transparent;
+  font-size: 11px;
 }
 
 .start-controls {

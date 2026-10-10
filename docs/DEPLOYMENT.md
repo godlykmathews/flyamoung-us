@@ -39,7 +39,7 @@ Multiple allowed frontend origins can be comma-separated. Add each preview origi
 
 Open the backend's HTTPS `/health` URL. It must return JSON containing `"status":"ok"` and `"game":"flight-404"`. An HTML page or a Vercel 404 is not the room server. Keep one instance: room state and four-digit codes are in memory.
 
-Create, join and solo practice all check this endpoint before connecting. The browser reports a missing backend, invalid/insecure URL, unreachable server or timeout with a readable error. Solo practice still uses the server simulation.
+Create, join and solo practice all check this endpoint before connecting. Temporary network failures, timeouts and HTTP 502/503/504 responses trigger automatic health checks for up to 90 seconds. The start page shows “Waking flight server…” during retries and lets the player cancel. Room creation or joining happens once, after the backend responds successfully. Missing backends and invalid/insecure URLs still report an immediate readable error. Solo practice still uses the server simulation.
 
 ### Option: Render Web Service for prototype testing
 
@@ -59,7 +59,7 @@ In [Render](https://dashboard.render.com/), create **New → Web Service** and c
 
 The backend-only build intentionally skips the Vite frontend because Vercel already serves it. Render supplies the port; the server reads `PORT`. After deployment, verify the service's HTTPS `/health` address. Use its hostname with `wss://` for Vercel's `VITE_SERVER_URL` in the next section. For example, a backend at `https://your-service.onrender.com` uses `wss://your-service.onrender.com`. Replace that example with the actual assigned hostname.
 
-Render supports [Node web services](https://render.com/docs/deploy-node-express-app) and [WebSockets](https://render.com/docs/websocket). Its [free plan](https://render.com/docs/free) is suitable for prototype testing: it sleeps after 15 minutes without inbound traffic and can take about a minute to wake. Wait for `/health` to respond before retrying a flight. Restarts end this prototype's in-memory rooms. Choose any paid plan only after reviewing its price; a free service is enough for the initial deployment check.
+Render supports [Node web services](https://render.com/docs/deploy-node-express-app) and [WebSockets](https://render.com/docs/websocket). Its [free plan](https://render.com/docs/free) is suitable for prototype testing: it sleeps after 15 minutes without inbound traffic and can take about a minute to wake. Click Create, Join or Solo practice once and leave the page open while it wakes; the client retries automatically for up to 90 seconds. If that budget expires, check `/health` and retry when the backend is available. Restarts end this prototype's in-memory rooms. Choose any paid plan only after reviewing its price; a free service is enough for the initial deployment check.
 
 ## 2. Configure the Vercel frontend
 
