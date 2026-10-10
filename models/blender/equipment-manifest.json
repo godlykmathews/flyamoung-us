@@ -1,0 +1,134 @@
+{
+  "generator": "scripts/blender/build_equipment.py",
+  "authoring_tool": "5.2.2 LTS",
+  "license": "Original assets authored for FLIGHT 404; no external model sources.",
+  "axis_contract": "GLB metres +Y up / +Z front; source helper game(x,y,z) -> Blender(x,-z,y)",
+  "assets": {
+    "flight-equipment.glb": {
+      "bytes": 823232,
+      "sha256": "e34efa92c94cf95b8d2999b01ae6bb2bd652ae43bc8aaf151139ea6127e7e5c9",
+      "triangles": 16692,
+      "meshes": 11,
+      "materials": 11,
+      "images": 1,
+      "bounds_game": {
+        "min": [
+          -3.53,
+          0.0,
+          -13.45
+        ],
+        "max": [
+          3.467,
+          2.46,
+          13.35
+        ]
+      },
+      "external_uris": []
+    },
+    "checklist.glb": {
+      "bytes": 284616,
+      "sha256": "e409e6bd17b942f0ea7ce5168bfcafdc9ccdf9e0a8ab7e57faedf7c6409d63e0",
+      "triangles": 2086,
+      "meshes": 8,
+      "materials": 8,
+      "images": 1,
+      "bounds_game": {
+        "min": [
+          -0.215,
+          -0.30113,
+          -0.09864
+        ],
+        "max": [
+          0.246,
+          0.30627,
+          0.13488
+        ]
+      },
+      "external_uris": []
+    },
+    "navigation.glb": {
+      "bytes": 475460,
+      "sha256": "69b4b7a3bb986c2c51b64cb38474aadc857e6de3c5f91f706306f23b3459868c",
+      "triangles": 7148,
+      "meshes": 7,
+      "materials": 7,
+      "images": 1,
+      "bounds_game": {
+        "min": [
+          -0.2575,
+          -0.31558,
+          -0.13087
+        ],
+        "max": [
+          0.2575,
+          0.32487,
+          0.15581
+        ]
+      },
+      "external_uris": []
+    },
+    "seatbelts.glb": {
+      "bytes": 424712,
+      "sha256": "1c45189028f60888f2404077114b0c37d3ea4a534a60c53a425513e8a66106bf",
+      "triangles": 5100,
+      "meshes": 13,
+      "materials": 8,
+      "images": 1,
+      "bounds_game": {
+        "min": [
+          -0.3115,
+          -0.2095,
+          -0.0175
+        ],
+        "max": [
+          0.3115,
+          0.2095,
+          0.1105
+        ]
+      },
+      "external_uris": []
+    },
+    "meals.glb": {
+      "bytes": 661100,
+      "sha256": "3db29f99c91ed40ecae4616a87e0e1f2c6e30051465f2072f44f3ff8d9895353",
+      "triangles": 14726,
+      "meshes": 15,
+      "materials": 15,
+      "images": 1,
+      "bounds_game": {
+        "min": [
+          -0.62,
+          0.0005,
+          -0.2745
+        ],
+        "max": [
+          0.5955,
+          0.472,
+          0.239
+        ]
+      },
+      "external_uris": []
+    },
+    "electrical.glb": {
+      "bytes": 531044,
+      "sha256": "b7189f9a5dbfa9e45a0a608e9593db2271135daebe561ef2f42e03cf66096f0a",
+      "triangles": 8396,
+      "meshes": 16,
+      "materials": 8,
+      "images": 1,
+      "bounds_game": {
+        "min": [
+          -0.77,
+          -0.55,
+          -0.026
+        ],
+        "max": [
+          0.77,
+          0.55,
+          0.1708
+        ]
+      },
+      "external_uris": []
+    }
+  }
+}

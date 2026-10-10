@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { FlightGame } from '../server/src/systems/game.js';
 import { assignRoles } from '../server/src/systems/roles.js';
 import type { TaskChallenge } from '../shared/protocol.js';
+import { canStand } from '../shared/world.js';
 
 function setup(count = 3, training = false) {
   let now = 0;
@@ -25,6 +26,41 @@ test('roles have independent private assignments and expected saboteur counts', 
     assert.equal([...assignments.values()].filter(p => p.role === 'Captain').length, 1);
   }
   assert.equal(assignRoles(['solo'], true).get('solo')?.allegiance, 'crew');
+});
+
+test('ten human-sized crew spawn in the aisle without overlapping, including replacement joins and restart', () => {
+  const { game, ids, advance } = setup(10);
+  game.removePlayer(ids[3]); game.addPlayer('replacement', 'Replacement');
+  const assertCrewSpacing = () => {
+    const players = game.snapshot().players;
+    assert.equal(players.length, 10);
+    for (const player of players) {
+      assert.ok(canStand(player.x, player.z));
+      for (const other of players) if (other.id !== player.id) {
+        assert.ok(Math.hypot(player.x - other.x, player.z - other.z) > .85);
+      }
+    }
+  };
+  assertCrewSpacing();
+  game.handle('replacement', 'ready', { ready: true });
+  game.handle(ids[0], 'start', {});
+  assert.equal(game.currentPhase, 'playing');
+  advance(360100);
+  assert.equal(game.currentPhase, 'ended');
+  game.handle(ids[0], 'restart', {});
+  assert.equal(game.currentPhase, 'lobby');
+  assertCrewSpacing();
+});
+
+test('equipment checks allow reading time but still reject expired sessions', () => {
+  for (const [duration, completed] of [[31000, true], [91000, false]] as const) {
+    const { game, ids, events, advance, move } = setup(1, true);
+    game.handle(ids[0], 'start', {}); move(ids[0], 0, 1, 650); move(ids[0], -1, 0, 200);
+    game.handle(ids[0], 'beginTask', { taskId: 'meals' });
+    const challenge = events.at(-1)?.payload as TaskChallenge;
+    advance(duration); game.handle(ids[0], 'completeTask', challenge);
+    assert.equal(game.snapshot().tasks.find(task => task.id === 'meals')!.completed, completed);
+  }
 });
 
 test('start gates, secret privacy and snapshot cloning resist client manipulation', () => {
@@ -64,9 +100,11 @@ test('station challenges enforce proximity, time, token and single completion', 
   game.handle(id, 'beginTask', { taskId: 'checklist' });
   assert.equal(events.at(-1)?.type, 'error');
   move(id, 0, 1, 650); // From aft aisle to galley, without crossing obstacles.
+  move(id, -1, 0, 200);
   game.handle(id, 'beginTask', { taskId: 'meals' });
   const challenge = events.at(-1)?.payload as TaskChallenge;
   assert.equal(events.at(-1)?.type, 'challenge');
+  assert.deepEqual([...challenge.sequence].sort(), [0, 1, 2, 3], 'every check covers each item exactly once');
   game.handle(id, 'completeTask', challenge);
   assert.equal(game.snapshot().tasks.find(t => t.id === 'meals')!.completed, false);
   advance(1250);

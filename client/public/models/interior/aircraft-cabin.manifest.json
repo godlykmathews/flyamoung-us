@@ -1,0 +1,48 @@
+{
+  "name": "FLIGHT 404 Blender cabin",
+  "generator": "5.2.2 LTS",
+  "source": "models/blender/aircraft-cabin.blend",
+  "export": "client/public/models/interior/aircraft-cabin.glb",
+  "authorship": "Original project-authored Blender geometry; no external model or texture sources.",
+  "source_objects": 1593,
+  "export_meshes": 15,
+  "triangles": 143030,
+  "materials": [
+    "cabin_ivory_satin",
+    "cabin_warm_panel",
+    "cabin_seat_back_shell",
+    "cabin_charcoal_trim",
+    "cabin_brushed_aluminium",
+    "cabin_latch_metal",
+    "cabin_navy_woven_fabric",
+    "cabin_aisle_woven_carpet",
+    "cabin_tailored_piping",
+    "cabin_headrest_cream",
+    "cabin_emissive",
+    "cabin_exit_safety",
+    "cabin_sign_white",
+    "cabin_safety_red",
+    "cabin_window_daylight"
+  ],
+  "bytes": 3933980,
+  "sha256": "078c73c30f3450bce6ac034d605cd41e67ead42987bc88de4db0dcfb5b392157",
+  "game_bounds": {
+    "min": [
+      -3.750258445739746,
+      -2.2351741790771484e-08,
+      -13.710000038146973
+    ],
+    "max": [
+      3.750258445739746,
+      3.200000047683716,
+      17.860000610351562
+    ]
+  },
+  "notes": [
+    "31.45m cabin with 4m aft vestibule, 20 linked-source seats, recessed transparent windows and open cockpit windscreen.",
+    "Original catering cart, crew storage, lavatory facade, luggage, folded jumpseat and extinguisher; amenities respect server colliders.",
+    "All task stations and collision logic remain separate.",
+    "cabin_emissive can be dimmed at runtime for blackout.",
+    "Textures are embedded PNGs; glTF uses standard PBR materials."
+  ]
+}

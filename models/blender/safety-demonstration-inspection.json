@@ -1,0 +1,872 @@
+{
+  "method": "Local GLB structural inspector plus Three GLTFLoader/AnimationMixer; all clips33samples; safety skinned vertices finite at all33samples. Static bounds notices expected on animated skins.",
+  "reports": [
+    {
+      "path": "client/public/models/animated/attendant-player.glb",
+      "structural": {
+        "source": "client/public/models/animated/attendant-player.glb",
+        "valid": true,
+        "bytes": 1076544,
+        "generator": "Khronos glTF Blender I/O v5.2.40",
+        "nodes": 20,
+        "meshes": 1,
+        "primitives": 1,
+        "meshInstances": 1,
+        "renderedPrimitives": 1,
+        "uniqueTriangles": 17814,
+        "sceneTriangles": 17814,
+        "materials": 1,
+        "materialNames": [
+          "Original cast · vertex colour"
+        ],
+        "textures": 0,
+        "images": [],
+        "requiredExtensions": [],
+        "usedExtensions": [],
+        "externalResources": [],
+        "dataUriResources": [],
+        "bounds": {
+          "min": [
+            -0.33900001645088196,
+            -0.0010000001639127731,
+            -0.16499999165534973
+          ],
+          "max": [
+            0.33900001645088196,
+            1.7619595527648926,
+            0.132999986410141
+          ],
+          "dimensions": [
+            0.6780000329017639,
+            1.7629595529288054,
+            0.2979999780654907
+          ],
+          "units": "meters (glTF convention)"
+        },
+        "errors": [],
+        "warnings": [
+          "Bounds represent the base mesh pose; skinning/morph animation is not evaluated"
+        ]
+      },
+      "sampleCount": 528,
+      "minFloor": -0.001000237872514391,
+      "maxHeight": 2.0081761816178743,
+      "animationNames": [
+        "Idle",
+        "Walk",
+        "Carry",
+        "Serve",
+        "Sit",
+        "Seated",
+        "Stand",
+        "Gesture",
+        "Brace",
+        "Dead",
+        "DeadStanding",
+        "Weapon",
+        "SafetySeatbelt",
+        "SafetyOxygen",
+        "SafetyLifeVest",
+        "SafetyExits"
+      ]
+    },
+    {
+      "path": "client/public/models/animated/attendant.glb",
+      "structural": {
+        "source": "client/public/models/animated/attendant.glb",
+        "valid": true,
+        "bytes": 1076516,
+        "generator": "Khronos glTF Blender I/O v5.2.40",
+        "nodes": 20,
+        "meshes": 1,
+        "primitives": 1,
+        "meshInstances": 1,
+        "renderedPrimitives": 1,
+        "uniqueTriangles": 17814,
+        "sceneTriangles": 17814,
+        "materials": 1,
+        "materialNames": [
+          "Original cast · vertex colour"
+        ],
+        "textures": 0,
+        "images": [],
+        "requiredExtensions": [],
+        "usedExtensions": [],
+        "externalResources": [],
+        "dataUriResources": [],
+        "bounds": {
+          "min": [
+            -0.33900001645088196,
+            -0.0010000001639127731,
+            -0.16499999165534973
+          ],
+          "max": [
+            0.33900001645088196,
+            1.7619595527648926,
+            0.132999986410141
+          ],
+          "dimensions": [
+            0.6780000329017639,
+            1.7629595529288054,
+            0.2979999780654907
+          ],
+          "units": "meters (glTF convention)"
+        },
+        "errors": [],
+        "warnings": [
+          "Bounds represent the base mesh pose; skinning/morph animation is not evaluated"
+        ]
+      },
+      "sampleCount": 528,
+      "minFloor": -0.001000237872514391,
+      "maxHeight": 2.0081761816178743,
+      "animationNames": [
+        "Idle",
+        "Walk",
+        "Carry",
+        "Serve",
+        "Sit",
+        "Seated",
+        "Stand",
+        "Gesture",
+        "Brace",
+        "Dead",
+        "DeadStanding",
+        "Weapon",
+        "SafetySeatbelt",
+        "SafetyOxygen",
+        "SafetyLifeVest",
+        "SafetyExits"
+      ]
+    },
+    {
+      "path": "client/public/models/animated/engineer.glb",
+      "structural": {
+        "source": "client/public/models/animated/engineer.glb",
+        "valid": true,
+        "bytes": 1004748,
+        "generator": "Khronos glTF Blender I/O v5.2.40",
+        "nodes": 20,
+        "meshes": 1,
+        "primitives": 1,
+        "meshInstances": 1,
+        "renderedPrimitives": 1,
+        "uniqueTriangles": 16208,
+        "sceneTriangles": 16208,
+        "materials": 1,
+        "materialNames": [
+          "Original cast · vertex colour"
+        ],
+        "textures": 0,
+        "images": [],
+        "requiredExtensions": [],
+        "usedExtensions": [],
+        "externalResources": [],
+        "dataUriResources": [],
+        "bounds": {
+          "min": [
+            -0.33900001645088196,
+            -0.0010000001639127731,
+            -0.16499999165534973
+          ],
+          "max": [
+            0.33900001645088196,
+            1.7619595527648926,
+            0.1080000177025795
+          ],
+          "dimensions": [
+            0.6780000329017639,
+            1.7629595529288054,
+            0.27300000935792923
+          ],
+          "units": "meters (glTF convention)"
+        },
+        "errors": [],
+        "warnings": [
+          "Bounds represent the base mesh pose; skinning/morph animation is not evaluated"
+        ]
+      },
+      "sampleCount": 528,
+      "minFloor": -0.001000237872514391,
+      "maxHeight": 2.0081761816178743,
+      "animationNames": [
+        "Idle",
+        "Walk",
+        "Carry",
+        "Serve",
+        "Sit",
+        "Seated",
+        "Stand",
+        "Gesture",
+        "Brace",
+        "Dead",
+        "DeadStanding",
+        "Weapon",
+        "SafetySeatbelt",
+        "SafetyOxygen",
+        "SafetyLifeVest",
+        "SafetyExits"
+      ]
+    },
+    {
+      "path": "client/public/models/animated/marshal.glb",
+      "structural": {
+        "source": "client/public/models/animated/marshal.glb",
+        "valid": true,
+        "bytes": 965292,
+        "generator": "Khronos glTF Blender I/O v5.2.40",
+        "nodes": 20,
+        "meshes": 1,
+        "primitives": 1,
+        "meshInstances": 1,
+        "renderedPrimitives": 1,
+        "uniqueTriangles": 15468,
+        "sceneTriangles": 15468,
+        "materials": 1,
+        "materialNames": [
+          "Original cast · vertex colour"
+        ],
+        "textures": 0,
+        "images": [],
+        "requiredExtensions": [],
+        "usedExtensions": [],
+        "externalResources": [],
+        "dataUriResources": [],
+        "bounds": {
+          "min": [
+            -0.33900001645088196,
+            -0.0010000001639127731,
+            -0.16499999165534973
+          ],
+          "max": [
+            0.33900001645088196,
+            1.7619595527648926,
+            0.1080000177025795
+          ],
+          "dimensions": [
+            0.6780000329017639,
+            1.7629595529288054,
+            0.27300000935792923
+          ],
+          "units": "meters (glTF convention)"
+        },
+        "errors": [],
+        "warnings": [
+          "Bounds represent the base mesh pose; skinning/morph animation is not evaluated"
+        ]
+      },
+      "sampleCount": 528,
+      "minFloor": -0.001000237872514391,
+      "maxHeight": 2.0081761816178743,
+      "animationNames": [
+        "Idle",
+        "Walk",
+        "Carry",
+        "Serve",
+        "Sit",
+        "Seated",
+        "Stand",
+        "Gesture",
+        "Brace",
+        "Dead",
+        "DeadStanding",
+        "Weapon",
+        "SafetySeatbelt",
+        "SafetyOxygen",
+        "SafetyLifeVest",
+        "SafetyExits"
+      ]
+    },
+    {
+      "path": "client/public/models/animated/passenger-a.glb",
+      "structural": {
+        "source": "client/public/models/animated/passenger-a.glb",
+        "valid": true,
+        "bytes": 1000028,
+        "generator": "Khronos glTF Blender I/O v5.2.40",
+        "nodes": 20,
+        "meshes": 1,
+        "primitives": 1,
+        "meshInstances": 1,
+        "renderedPrimitives": 1,
+        "uniqueTriangles": 16296,
+        "sceneTriangles": 16296,
+        "materials": 1,
+        "materialNames": [
+          "Original cast · vertex colour"
+        ],
+        "textures": 0,
+        "images": [],
+        "requiredExtensions": [],
+        "usedExtensions": [],
+        "externalResources": [],
+        "dataUriResources": [],
+        "bounds": {
+          "min": [
+            -0.33900001645088196,
+            -0.0010000001639127731,
+            -0.16499999165534973
+          ],
+          "max": [
+            0.33900001645088196,
+            1.7619595527648926,
+            0.1080000177025795
+          ],
+          "dimensions": [
+            0.6780000329017639,
+            1.7629595529288054,
+            0.27300000935792923
+          ],
+          "units": "meters (glTF convention)"
+        },
+        "errors": [],
+        "warnings": [
+          "Bounds represent the base mesh pose; skinning/morph animation is not evaluated"
+        ]
+      },
+      "sampleCount": 528,
+      "minFloor": -0.001000237872514391,
+      "maxHeight": 2.0081761816178743,
+      "animationNames": [
+        "Idle",
+        "Walk",
+        "Carry",
+        "Serve",
+        "Sit",
+        "Seated",
+        "Stand",
+        "Gesture",
+        "Brace",
+        "Dead",
+        "DeadStanding",
+        "Weapon",
+        "SafetySeatbelt",
+        "SafetyOxygen",
+        "SafetyLifeVest",
+        "SafetyExits"
+      ]
+    },
+    {
+      "path": "client/public/models/animated/passenger-b.glb",
+      "structural": {
+        "source": "client/public/models/animated/passenger-b.glb",
+        "valid": true,
+        "bytes": 1032444,
+        "generator": "Khronos glTF Blender I/O v5.2.40",
+        "nodes": 20,
+        "meshes": 1,
+        "primitives": 1,
+        "meshInstances": 1,
+        "renderedPrimitives": 1,
+        "uniqueTriangles": 17026,
+        "sceneTriangles": 17026,
+        "materials": 1,
+        "materialNames": [
+          "Original cast · vertex colour"
+        ],
+        "textures": 0,
+        "images": [],
+        "requiredExtensions": [],
+        "usedExtensions": [],
+        "externalResources": [],
+        "dataUriResources": [],
+        "bounds": {
+          "min": [
+            -0.33900001645088196,
+            -0.0010000001639127731,
+            -0.16499999165534973
+          ],
+          "max": [
+            0.33900001645088196,
+            1.7619595527648926,
+            0.1080000177025795
+          ],
+          "dimensions": [
+            0.6780000329017639,
+            1.7629595529288054,
+            0.27300000935792923
+          ],
+          "units": "meters (glTF convention)"
+        },
+        "errors": [],
+        "warnings": [
+          "Bounds represent the base mesh pose; skinning/morph animation is not evaluated"
+        ]
+      },
+      "sampleCount": 528,
+      "minFloor": -0.001000237872514391,
+      "maxHeight": 2.0081761816178743,
+      "animationNames": [
+        "Idle",
+        "Walk",
+        "Carry",
+        "Serve",
+        "Sit",
+        "Seated",
+        "Stand",
+        "Gesture",
+        "Brace",
+        "Dead",
+        "DeadStanding",
+        "Weapon",
+        "SafetySeatbelt",
+        "SafetyOxygen",
+        "SafetyLifeVest",
+        "SafetyExits"
+      ]
+    },
+    {
+      "path": "client/public/models/animated/passenger-c.glb",
+      "structural": {
+        "source": "client/public/models/animated/passenger-c.glb",
+        "valid": true,
+        "bytes": 1015560,
+        "generator": "Khronos glTF Blender I/O v5.2.40",
+        "nodes": 20,
+        "meshes": 1,
+        "primitives": 1,
+        "meshInstances": 1,
+        "renderedPrimitives": 1,
+        "uniqueTriangles": 16484,
+        "sceneTriangles": 16484,
+        "materials": 1,
+        "materialNames": [
+          "Original cast · vertex colour"
+        ],
+        "textures": 0,
+        "images": [],
+        "requiredExtensions": [],
+        "usedExtensions": [],
+        "externalResources": [],
+        "dataUriResources": [],
+        "bounds": {
+          "min": [
+            -0.33900001645088196,
+            -0.0010000001639127731,
+            -0.16499999165534973
+          ],
+          "max": [
+            0.33900001645088196,
+            1.7619595527648926,
+            0.1080000177025795
+          ],
+          "dimensions": [
+            0.6780000329017639,
+            1.7629595529288054,
+            0.27300000935792923
+          ],
+          "units": "meters (glTF convention)"
+        },
+        "errors": [],
+        "warnings": [
+          "Bounds represent the base mesh pose; skinning/morph animation is not evaluated"
+        ]
+      },
+      "sampleCount": 528,
+      "minFloor": -0.001000237872514391,
+      "maxHeight": 2.0081761816178743,
+      "animationNames": [
+        "Idle",
+        "Walk",
+        "Carry",
+        "Serve",
+        "Sit",
+        "Seated",
+        "Stand",
+        "Gesture",
+        "Brace",
+        "Dead",
+        "DeadStanding",
+        "Weapon",
+        "SafetySeatbelt",
+        "SafetyOxygen",
+        "SafetyLifeVest",
+        "SafetyExits"
+      ]
+    },
+    {
+      "path": "client/public/models/animated/pilot.glb",
+      "structural": {
+        "source": "client/public/models/animated/pilot.glb",
+        "valid": true,
+        "bytes": 1055380,
+        "generator": "Khronos glTF Blender I/O v5.2.40",
+        "nodes": 20,
+        "meshes": 1,
+        "primitives": 1,
+        "meshInstances": 1,
+        "renderedPrimitives": 1,
+        "uniqueTriangles": 17256,
+        "sceneTriangles": 17256,
+        "materials": 1,
+        "materialNames": [
+          "Original cast · vertex colour"
+        ],
+        "textures": 0,
+        "images": [],
+        "requiredExtensions": [],
+        "usedExtensions": [],
+        "externalResources": [],
+        "dataUriResources": [],
+        "bounds": {
+          "min": [
+            -0.33900001645088196,
+            -0.0010000001639127731,
+            -0.16499999165534973
+          ],
+          "max": [
+            0.33900001645088196,
+            1.7619595527648926,
+            0.1080000177025795
+          ],
+          "dimensions": [
+            0.6780000329017639,
+            1.7629595529288054,
+            0.27300000935792923
+          ],
+          "units": "meters (glTF convention)"
+        },
+        "errors": [],
+        "warnings": [
+          "Bounds represent the base mesh pose; skinning/morph animation is not evaluated"
+        ]
+      },
+      "sampleCount": 528,
+      "minFloor": -0.001000237872514391,
+      "maxHeight": 2.0081761816178743,
+      "animationNames": [
+        "Idle",
+        "Walk",
+        "Carry",
+        "Serve",
+        "Sit",
+        "Seated",
+        "Stand",
+        "Gesture",
+        "Brace",
+        "Dead",
+        "DeadStanding",
+        "Weapon",
+        "SafetySeatbelt",
+        "SafetyOxygen",
+        "SafetyLifeVest",
+        "SafetyExits"
+      ]
+    },
+    {
+      "path": "client/public/models/animated/sidearm.glb",
+      "structural": {
+        "source": "client/public/models/animated/sidearm.glb",
+        "valid": true,
+        "bytes": 29128,
+        "generator": "Khronos glTF Blender I/O v5.2.40",
+        "nodes": 1,
+        "meshes": 1,
+        "primitives": 1,
+        "meshInstances": 1,
+        "renderedPrimitives": 1,
+        "uniqueTriangles": 780,
+        "sceneTriangles": 780,
+        "materials": 1,
+        "materialNames": [
+          "Original cast · vertex colour"
+        ],
+        "textures": 0,
+        "images": [],
+        "requiredExtensions": [],
+        "usedExtensions": [],
+        "externalResources": [],
+        "dataUriResources": [],
+        "bounds": {
+          "min": [
+            -0.016499999910593033,
+            -0.05550000071525574,
+            -0.11749999970197678
+          ],
+          "max": [
+            0.016499999910593033,
+            0.04800000041723251,
+            0.03400000184774399
+          ],
+          "dimensions": [
+            0.032999999821186066,
+            0.10350000113248825,
+            0.15150000154972076
+          ],
+          "units": "meters (glTF convention)"
+        },
+        "errors": [],
+        "warnings": []
+      },
+      "sampleCount": 0,
+      "minFloor": null,
+      "maxHeight": null,
+      "animationNames": []
+    },
+    {
+      "path": "client/public/models/safety/belt-left.glb",
+      "structural": {
+        "source": "client/public/models/safety/belt-left.glb",
+        "valid": true,
+        "bytes": 29776,
+        "generator": "Khronos glTF Blender I/O v5.2.40",
+        "nodes": 1,
+        "meshes": 1,
+        "primitives": 3,
+        "meshInstances": 1,
+        "renderedPrimitives": 3,
+        "uniqueTriangles": 1048,
+        "sceneTriangles": 1048,
+        "materials": 3,
+        "materialNames": [
+          "Brushed buckle aluminium",
+          "Dark equipment detail",
+          "Woven navy safety belt"
+        ],
+        "textures": 0,
+        "images": [],
+        "requiredExtensions": [],
+        "usedExtensions": [],
+        "externalResources": [],
+        "dataUriResources": [],
+        "bounds": {
+          "min": [
+            -0.17635829746723175,
+            -0.039500001817941666,
+            -0.013000000268220901
+          ],
+          "max": [
+            0.026499999687075615,
+            0.020500000566244125,
+            0.014000000432133675
+          ],
+          "dimensions": [
+            0.20285829715430737,
+            0.06000000238418579,
+            0.027000000700354576
+          ],
+          "units": "meters (glTF convention)"
+        },
+        "errors": [],
+        "warnings": []
+      },
+      "sampleCount": 0,
+      "minFloor": null,
+      "maxHeight": null,
+      "animationNames": []
+    },
+    {
+      "path": "client/public/models/safety/belt-right.glb",
+      "structural": {
+        "source": "client/public/models/safety/belt-right.glb",
+        "valid": true,
+        "bytes": 24916,
+        "generator": "Khronos glTF Blender I/O v5.2.40",
+        "nodes": 1,
+        "meshes": 1,
+        "primitives": 3,
+        "meshInstances": 1,
+        "renderedPrimitives": 3,
+        "uniqueTriangles": 860,
+        "sceneTriangles": 860,
+        "materials": 3,
+        "materialNames": [
+          "Brushed buckle aluminium",
+          "Dark equipment detail",
+          "Woven navy safety belt"
+        ],
+        "textures": 0,
+        "images": [],
+        "requiredExtensions": [],
+        "usedExtensions": [],
+        "externalResources": [],
+        "dataUriResources": [],
+        "bounds": {
+          "min": [
+            -0.030499998480081558,
+            -0.039500001817941666,
+            -0.005000000353902578
+          ],
+          "max": [
+            0.17711366713047028,
+            0.019500000402331352,
+            0.018000001087784767
+          ],
+          "dimensions": [
+            0.20761366561055183,
+            0.05900000222027302,
+            0.023000001441687346
+          ],
+          "units": "meters (glTF convention)"
+        },
+        "errors": [],
+        "warnings": []
+      },
+      "sampleCount": 0,
+      "minFloor": null,
+      "maxHeight": null,
+      "animationNames": []
+    },
+    {
+      "path": "client/public/models/safety/life-vest-folded.glb",
+      "structural": {
+        "source": "client/public/models/safety/life-vest-folded.glb",
+        "valid": true,
+        "bytes": 39436,
+        "generator": "Khronos glTF Blender I/O v5.2.40",
+        "nodes": 1,
+        "meshes": 1,
+        "primitives": 4,
+        "meshInstances": 1,
+        "renderedPrimitives": 4,
+        "uniqueTriangles": 1364,
+        "sceneTriangles": 1364,
+        "materials": 4,
+        "materialNames": [
+          "Safety yellow life vest",
+          "Reservoir soft ivory",
+          "Dark equipment detail",
+          "Pull tab orange"
+        ],
+        "textures": 0,
+        "images": [],
+        "requiredExtensions": [],
+        "usedExtensions": [],
+        "externalResources": [],
+        "dataUriResources": [],
+        "bounds": {
+          "min": [
+            -0.11749999970197678,
+            -0.07799999415874481,
+            -0.044999998062849045
+          ],
+          "max": [
+            0.11749999970197678,
+            0.07750000059604645,
+            0.028999999165534973
+          ],
+          "dimensions": [
+            0.23499999940395355,
+            0.15549999475479126,
+            0.07399999722838402
+          ],
+          "units": "meters (glTF convention)"
+        },
+        "errors": [],
+        "warnings": []
+      },
+      "sampleCount": 0,
+      "minFloor": null,
+      "maxHeight": null,
+      "animationNames": []
+    },
+    {
+      "path": "client/public/models/safety/life-vest.glb",
+      "structural": {
+        "source": "client/public/models/safety/life-vest.glb",
+        "valid": true,
+        "bytes": 111696,
+        "generator": "Khronos glTF Blender I/O v5.2.40",
+        "nodes": 1,
+        "meshes": 1,
+        "primitives": 6,
+        "meshInstances": 1,
+        "renderedPrimitives": 6,
+        "uniqueTriangles": 4160,
+        "sceneTriangles": 4160,
+        "materials": 6,
+        "materialNames": [
+          "Safety yellow life vest",
+          "Reflective silver patch",
+          "Mask golden yellow rim",
+          "Woven navy safety belt",
+          "Pull tab orange",
+          "Dark equipment detail"
+        ],
+        "textures": 0,
+        "images": [],
+        "requiredExtensions": [],
+        "usedExtensions": [],
+        "externalResources": [],
+        "dataUriResources": [],
+        "bounds": {
+          "min": [
+            -0.1849999576807022,
+            -0.28349998593330383,
+            -0.0778130441904068
+          ],
+          "max": [
+            0.1849999874830246,
+            0.12000000476837158,
+            0.12866154313087463
+          ],
+          "dimensions": [
+            0.3699999451637268,
+            0.4034999907016754,
+            0.20647458732128143
+          ],
+          "units": "meters (glTF convention)"
+        },
+        "errors": [],
+        "warnings": []
+      },
+      "sampleCount": 0,
+      "minFloor": null,
+      "maxHeight": null,
+      "animationNames": []
+    },
+    {
+      "path": "client/public/models/safety/oxygen-mask.glb",
+      "structural": {
+        "source": "client/public/models/safety/oxygen-mask.glb",
+        "valid": true,
+        "bytes": 62736,
+        "generator": "Khronos glTF Blender I/O v5.2.40",
+        "nodes": 1,
+        "meshes": 1,
+        "primitives": 4,
+        "meshInstances": 1,
+        "renderedPrimitives": 4,
+        "uniqueTriangles": 2332,
+        "sceneTriangles": 2332,
+        "materials": 4,
+        "materialNames": [
+          "Oxygen cup pale blue",
+          "Mask golden yellow rim",
+          "Reservoir soft ivory",
+          "Woven navy safety belt"
+        ],
+        "textures": 0,
+        "images": [],
+        "requiredExtensions": [],
+        "usedExtensions": [],
+        "externalResources": [],
+        "dataUriResources": [],
+        "bounds": {
+          "min": [
+            -0.06243420019745827,
+            -0.16499999165534973,
+            -0.05391440913081169
+          ],
+          "max": [
+            0.07894260436296463,
+            0.23188123106956482,
+            0.057642195373773575
+          ],
+          "dimensions": [
+            0.1413768045604229,
+            0.39688122272491455,
+            0.11155660450458527
+          ],
+          "units": "meters (glTF convention)"
+        },
+        "errors": [],
+        "warnings": []
+      },
+      "sampleCount": 0,
+      "minFloor": null,
+      "maxHeight": null,
+      "animationNames": []
+    }
+  ]
+}

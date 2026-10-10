@@ -1,25 +1,35 @@
-import { Suspense, useRef, Component, type ReactNode } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { ContactShadows, Float, Html } from '@react-three/drei';
-import { Group, MathUtils } from 'three';
-import { Aircraft, ExteriorAircraft } from './Aircraft';
+import { Suspense, Component, type ReactNode } from 'react';
+import { Canvas } from '@react-three/fiber';
+import { ContactShadows, Float } from '@react-three/drei';
+import { Aircraft } from './Aircraft';
+import { FlightModel } from './FlightModel';
+import { EmergencyDescent } from './EmergencyDescent';
+import { DepartureScene } from './DepartureScene';
 import { Controls } from './Controls';
+import { CrewAvatar } from './CrewAvatar';
+import { CabinReflections } from './CabinReflections';
+import { CabinNpcs } from './CabinNpcs';
+import { FlightEnvironment } from './FlightEnvironment';
+import { SafetyPresentationCamera, SafetyStationSign } from './SafetyPresentation';
+import { IncidentEffects, IncidentHorizon } from './IncidentEffects';
 import { session } from '../network/session';
-import type { Player, Snapshot } from '../../../shared/protocol';
-function Avatar({player}:{player:Player}) {
- const ref=useRef<Group>(null);const first=useRef(true);const walk=useRef(0);
- useFrame((_,dt)=>{const group=ref.current;if(!group)return;const target=session.get().snapshot?.players.find(p=>p.id===player.id);if(!target)return;if(first.current){group.position.set(target.x,0,target.z);first.current=false;}const distance=Math.hypot(target.x-group.position.x,target.z-group.position.z);walk.current+=dt*9;group.position.x=MathUtils.damp(group.position.x,target.x,14,dt);group.position.z=MathUtils.damp(group.position.z,target.z,14,dt);group.position.y=distance>.03?Math.sin(walk.current)*.035:0;group.rotation.y=target.yaw;});
- return <group ref={ref}><mesh position={[0,1.05,0]}><capsuleGeometry args={[.23,.55,4,10]}/><meshStandardMaterial color={player.detained?'#64716e':player.color}/></mesh><mesh position={[0,1.65,0]}><sphereGeometry args={[.21,16,12]}/><meshStandardMaterial color="#d4ac89"/></mesh><mesh position={[0,1.73,0]}><sphereGeometry args={[.217,16,8,0,Math.PI*2,0,Math.PI/2]}/><meshStandardMaterial color="#263b3b"/></mesh>{[-.13,.13].map(x=><mesh key={x} position={[x,.34,0]}><capsuleGeometry args={[.085,.48,4,8]}/><meshStandardMaterial color="#263b3b"/></mesh>)}<mesh position={[0,1.12,-.235]}><boxGeometry args={[.11,.16,.015]}/><meshStandardMaterial color="#fff6d9"/></mesh><Html center position={[0,2.1,0]} distanceFactor={7} occlude><div className="avatar-label">{player.name}<small>{player.detained?'DETAINED':player.role}</small></div></Html></group>;
-}
+import type { Snapshot } from '../../../shared/protocol';
 class SceneBoundary extends Component<{children:ReactNode},{error:boolean}> {
  state={error:false};static getDerivedStateFromError(){return {error:true};}
  render(){return this.state.error?<div className="webgl-error">3D rendering is unavailable. Enable hardware acceleration and reload in a desktop browser.</div>:this.props.children;}
 }
-export function Scene({snapshot,enabled,onNearby,onArea,onLock}:{snapshot:Snapshot|null;enabled:boolean;onNearby:(id:string|null)=>void;onArea:(area:string)=>void;onLock:(locked:boolean)=>void}) {
+export function Scene({snapshot,enabled,departing,emergencyDescent,onEmergencyComplete,onDepartureComplete,onNearby,onArea,onLock}:{snapshot:Snapshot|null;enabled:boolean;departing:boolean;emergencyDescent:boolean;onEmergencyComplete:()=>void;onDepartureComplete:()=>void;onNearby:(id:string|null)=>void;onArea:(area:string)=>void;onLock:(locked:boolean)=>void}) {
  const blackout=snapshot?.sabotage==='blackout';
- return <SceneBoundary><Canvas key={snapshot?'cabin':'exterior'} camera={snapshot?{position:[0,1.68,8],fov:76,near:.05,far:150}:{position:[17,10,22],fov:36}} dpr={[1,1.5]} shadows gl={{antialias:true,powerPreference:'high-performance'}}>
- <color attach="background" args={[snapshot?'#b8d5df':'#dbe5df']}/><fog attach="fog" args={[snapshot?'#b8d5df':'#dbe5df',snapshot?35:38,100]}/>
- <ambientLight intensity={blackout?.1:snapshot?.8:1.1}/><hemisphereLight args={['#d7f2ff','#a39a81',blackout?.15:1.5]}/><directionalLight position={[8,15,5]} intensity={snapshot?1:3} castShadow shadow-mapSize={[1024,1024]}/>
- <Suspense fallback={null}>{snapshot?<><Aircraft blackout={blackout} completedTasks={snapshot.tasks.filter(t=>t.completed).map(t=>t.id)}/>{snapshot.players.filter(p=>p.id!==session.id()).map(p=><Avatar key={p.id} player={p}/>)}<Controls enabled={enabled} onNearby={onNearby} onArea={onArea} onLock={onLock}/></>:<><Float speed={.7} rotationIntensity={.08} floatIntensity={.3}><group position={[1,1,0]} rotation={[0,-.3,-.04]}><ExteriorAircraft/></group></Float><ContactShadows position={[0,-3.3,0]} opacity={.25} scale={60} blur={3} far={15} resolution={256}/><gridHelper args={[160,32,'#bac9c1','#cedad3']} position={[0,-3.4,0]}/></>}</Suspense>
+ const storm=snapshot?.story.turbulence.active;
+ const pressure=snapshot?.experience.incident==='decompression';
+ const presenting=snapshot?.safety.status==='demonstrating'&&snapshot.safety.operatorId===session.id();
+ if(emergencyDescent)return <SceneBoundary><Canvas key="emergency-descent" camera={{position:[36,23,-29],fov:45,near:.1,far:6000}} dpr={[1,1.5]} shadows gl={{antialias:true,powerPreference:'high-performance'}}><EmergencyDescent onComplete={onEmergencyComplete}/></Canvas></SceneBoundary>;
+ if(departing)return <SceneBoundary><Canvas camera={{position:[31,10.5,-30],fov:45,near:.1,far:6000}} dpr={[1,1.5]} shadows gl={{antialias:true,powerPreference:'high-performance'}}><DepartureScene onComplete={onDepartureComplete}/></Canvas></SceneBoundary>;
+ return <SceneBoundary><Canvas key={snapshot?'cabin':'exterior'} camera={snapshot?{position:[0,1.68,8],fov:76,near:.05,far:6000}:{position:[19,12,-29],fov:38}} dpr={[1,1.5]} shadows gl={{antialias:true,powerPreference:'high-performance'}}>
+ <color attach="background" args={[snapshot?'#b8d5df':'#e8eef2']}/><fog attach="fog" args={[snapshot?'#b8d5df':'#e8eef2',snapshot?250:38,snapshot?2200:100]}/>
+ <ambientLight intensity={blackout?.08:snapshot?.55:1.1}/><hemisphereLight args={[snapshot?(storm?'#bccbd9':'#e4f2ff'):'#d7f2ff',snapshot?'#536778':'#a39a81',blackout?.13:snapshot?1.1:1.5]}/><directionalLight position={[8,15,5]} intensity={blackout?.05:snapshot?(storm?.55:1):3} castShadow shadow-mapSize={[1024,1024]} shadow-camera-left={-20} shadow-camera-right={20} shadow-camera-top={20} shadow-camera-bottom={-20} shadow-normalBias={.025}/>
+ {snapshot&&<><IncidentHorizon snapshot={snapshot}><FlightEnvironment moving={snapshot.phase==='playing'}/></IncidentHorizon><CabinReflections blackout={blackout}/></>}
+ {snapshot&&[-11,-5,2,10,16].map(z=><pointLight key={z} position={[0,2.8,z]} color='#fff4df' intensity={blackout?0:7} distance={11} decay={2}/>)}
+ <Suspense fallback={null}>{snapshot?<><Aircraft blackout={blackout} completedTasks={snapshot.tasks.filter(t=>t.completed).map(t=>t.id)}/><IncidentEffects snapshot={snapshot}/><Suspense fallback={null}><CabinNpcs npcs={snapshot.npcs} experience={snapshot.experience} turbulence={!!storm||pressure}/></Suspense>{snapshot.players.filter(p=>p.id!==session.id()||presenting).map(p=><CrewAvatar key={p.id} player={p} safety={snapshot.safety.operatorId===p.id&&snapshot.safety.status==='demonstrating'?snapshot.safety:undefined}/>)}<SafetyStationSign complete={snapshot.safety.status==='complete'}/><Controls cameraOverride={presenting} turbulence={storm?Math.max(.25,Math.abs(snapshot.story.turbulence.roll)):pressure?.22:0} enabled={enabled} onNearby={onNearby} onArea={onArea} onLock={onLock}/>{presenting&&<SafetyPresentationCamera safety={snapshot.safety}/>}</>:<><Float speed={.7} rotationIntensity={.08} floatIntensity={.3}><group position={[1,1,0]} rotation={[0,-.3,-.04]} scale={.78}><FlightModel/></group></Float><ContactShadows position={[0,-3.3,0]} opacity={.25} scale={60} blur={3} far={15} resolution={256}/><gridHelper args={[160,32,'#c4d0db','#dbe3e9']} position={[0,-3.4,0]}/></>}</Suspense>
  </Canvas></SceneBoundary>;
 }

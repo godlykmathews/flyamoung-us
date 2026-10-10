@@ -1,0 +1,296 @@
+[
+  {
+    "source": "client/public/models/characters/attendant-player.glb",
+    "valid": true,
+    "bytes": 930408,
+    "generator": "Khronos glTF Blender I/O v5.2.40",
+    "nodes": 19,
+    "meshes": 1,
+    "primitives": 1,
+    "meshInstances": 1,
+    "renderedPrimitives": 1,
+    "uniqueTriangles": 26000,
+    "sceneTriangles": 26000,
+    "materials": 1,
+    "materialNames": [
+      "Coloured airline uniform / skin.001"
+    ],
+    "textures": 0,
+    "images": [],
+    "requiredExtensions": [],
+    "usedExtensions": [],
+    "externalResources": [],
+    "dataUriResources": [],
+    "bounds": {
+      "min": [
+        -0.3899404838623251,
+        0.0002743251097854227,
+        -0.17704668837892715
+      ],
+      "max": [
+        0.3894613460484477,
+        1.699967384338379,
+        0.17698187020463138
+      ],
+      "dimensions": [
+        0.7794018299107728,
+        1.6996930592285935,
+        0.35402855858355853
+      ],
+      "units": "meters (glTF convention)"
+    },
+    "errors": [],
+    "warnings": [
+      "Bounds represent the base mesh pose; skinning/morph animation is not evaluated"
+    ]
+  },
+  {
+    "source": "client/public/models/characters/attendant.glb",
+    "valid": true,
+    "bytes": 930376,
+    "generator": "Khronos glTF Blender I/O v5.2.40",
+    "nodes": 19,
+    "meshes": 1,
+    "primitives": 1,
+    "meshInstances": 1,
+    "renderedPrimitives": 1,
+    "uniqueTriangles": 26000,
+    "sceneTriangles": 26000,
+    "materials": 1,
+    "materialNames": [
+      "Coloured airline uniform / skin"
+    ],
+    "textures": 0,
+    "images": [],
+    "requiredExtensions": [],
+    "usedExtensions": [],
+    "externalResources": [],
+    "dataUriResources": [],
+    "bounds": {
+      "min": [
+        -0.3899404838623251,
+        0.0002743251097854227,
+        -0.17704668837892715
+      ],
+      "max": [
+        0.3894613460484477,
+        1.699967384338379,
+        0.17698187020463138
+      ],
+      "dimensions": [
+        0.7794018299107728,
+        1.6996930592285935,
+        0.35402855858355853
+      ],
+      "units": "meters (glTF convention)"
+    },
+    "errors": [],
+    "warnings": [
+      "Bounds represent the base mesh pose; skinning/morph animation is not evaluated"
+    ]
+  },
+  {
+    "source": "client/public/models/characters/passenger-a-seated.glb",
+    "valid": true,
+    "bytes": 1448960,
+    "generator": "Khronos glTF Blender I/O v5.2.40",
+    "nodes": 2,
+    "meshes": 1,
+    "primitives": 1,
+    "meshInstances": 1,
+    "renderedPrimitives": 1,
+    "uniqueTriangles": 34999,
+    "sceneTriangles": 34999,
+    "materials": 1,
+    "materialNames": [
+      "material_0"
+    ],
+    "textures": 2,
+    "images": [
+      {
+        "name": "Image_2",
+        "mimeType": "image/jpeg",
+        "bytes": 12798,
+        "embedded": true
+      },
+      {
+        "name": "Image_0",
+        "mimeType": "image/jpeg",
+        "bytes": 132597,
+        "embedded": true
+      }
+    ],
+    "requiredExtensions": [],
+    "usedExtensions": [],
+    "externalResources": [],
+    "dataUriResources": [],
+    "bounds": {
+      "min": [
+        -0.33911076188087463,
+        0,
+        -0.6924440860748291
+      ],
+      "max": [
+        0.33493420481681824,
+        1.5615359544754028,
+        0.2583145797252655
+      ],
+      "dimensions": [
+        0.6740449666976929,
+        1.5615359544754028,
+        0.9507586658000946
+      ],
+      "units": "meters (glTF convention)"
+    },
+    "errors": [],
+    "warnings": []
+  },
+  {
+    "source": "client/public/models/characters/passenger-b-seated.glb",
+    "valid": true,
+    "bytes": 2950120,
+    "generator": "Khronos glTF Blender I/O v5.2.40",
+    "nodes": 2,
+    "meshes": 1,
+    "primitives": 1,
+    "meshInstances": 1,
+    "renderedPrimitives": 1,
+    "uniqueTriangles": 59993,
+    "sceneTriangles": 59993,
+    "materials": 1,
+    "materialNames": [
+      "material_0.001"
+    ],
+    "textures": 1,
+    "images": [
+      {
+        "name": "Image_0",
+        "mimeType": "image/jpeg",
+        "bytes": 124629,
+        "embedded": true
+      }
+    ],
+    "requiredExtensions": [],
+    "usedExtensions": [],
+    "externalResources": [],
+    "dataUriResources": [],
+    "bounds": {
+      "min": [
+        -0.27088817954063416,
+        0.00007559778896393254,
+        -0.7140070796012878
+      ],
+      "max": [
+        0.28444933891296387,
+        1.5624425411224365,
+        0.2345610111951828
+      ],
+      "dimensions": [
+        0.555337518453598,
+        1.5623669433334726,
+        0.9485680907964706
+      ],
+      "units": "meters (glTF convention)"
+    },
+    "errors": [],
+    "warnings": []
+  },
+  {
+    "source": "client/public/models/characters/passenger-c-seated.glb",
+    "valid": true,
+    "bytes": 1536112,
+    "generator": "Khronos glTF Blender I/O v5.2.40",
+    "nodes": 2,
+    "meshes": 1,
+    "primitives": 1,
+    "meshInstances": 1,
+    "renderedPrimitives": 1,
+    "uniqueTriangles": 34998,
+    "sceneTriangles": 34998,
+    "materials": 1,
+    "materialNames": [
+      "Material.001"
+    ],
+    "textures": 1,
+    "images": [
+      {
+        "name": "Image_0",
+        "mimeType": "image/jpeg",
+        "bytes": 151888,
+        "embedded": true
+      }
+    ],
+    "requiredExtensions": [],
+    "usedExtensions": [
+      "KHR_materials_specular"
+    ],
+    "externalResources": [],
+    "dataUriResources": [],
+    "bounds": {
+      "min": [
+        -0.2101227045059204,
+        0,
+        -0.6869551539421082
+      ],
+      "max": [
+        0.48448336124420166,
+        1.562082290649414,
+        0.32745876908302307
+      ],
+      "dimensions": [
+        0.6946060657501221,
+        1.562082290649414,
+        1.0144139230251312
+      ],
+      "units": "meters (glTF convention)"
+    },
+    "errors": [],
+    "warnings": []
+  },
+  {
+    "source": "client/public/models/characters/pilot-seated.glb",
+    "valid": true,
+    "bytes": 811976,
+    "generator": "Khronos glTF Blender I/O v5.2.40",
+    "nodes": 16,
+    "meshes": 15,
+    "primitives": 15,
+    "meshInstances": 15,
+    "renderedPrimitives": 15,
+    "uniqueTriangles": 31363,
+    "sceneTriangles": 31363,
+    "materials": 4,
+    "materialNames": [
+      "Pilot brushed gold insignia",
+      "Pilot midnight navy uniform",
+      "Pilot black leather",
+      "Pilot painted uniform"
+    ],
+    "textures": 0,
+    "images": [],
+    "requiredExtensions": [],
+    "usedExtensions": [],
+    "externalResources": [],
+    "dataUriResources": [],
+    "bounds": {
+      "min": [
+        -0.2873860001564026,
+        7.294325428119919e-7,
+        -0.7128651738166809
+      ],
+      "max": [
+        0.28748586773872375,
+        1.4353698082268238,
+        0.2606566846370697
+      ],
+      "dimensions": [
+        0.5748718678951263,
+        1.435369078794281,
+        0.9735218584537506
+      ],
+      "units": "meters (glTF convention)"
+    },
+    "errors": [],
+    "warnings": []
+  }
+]

@@ -1,0 +1,99 @@
+{
+  "generator": "scripts/blender/build_passengers.py",
+  "blender": "5.2.2 LTS",
+  "assets": {
+    "passenger-a-seated": {
+      "source": "models/casual_portrait_of_a_mature_man.glb",
+      "source_metadata": {
+        "author": "restore50 (https://sketchfab.com/restore50)",
+        "license": "CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)",
+        "source": "https://sketchfab.com/3d-models/casual-portrait-of-a-mature-man-b5fb38849c2640628ecf17ecac244b53",
+        "title": "Casual Portrait of a Mature Man"
+      },
+      "source_sha256": "2370c8142f2a75dc393bc368d9911c3a62bb70d15678a5dd6bd42ac389ac1994",
+      "bytes": 1448960,
+      "sha256": "01a83c8d6fda5ad62e11c3e586c5dbf7de70dc18884b7a688d57babbce9a8fef",
+      "triangles": 34999,
+      "meshes": 1,
+      "primitives": 1,
+      "images": 2,
+      "animations": [],
+      "bounds_game": {
+        "min": [
+          -0.33911076188087463,
+          0.0,
+          -0.6924440860748291
+        ],
+        "max": [
+          0.33493420481681824,
+          1.5615359544754028,
+          0.2583145797252655
+        ]
+      },
+      "seat_height": 0.57,
+      "axis": "Y up / -Z forward / hip local Z=0"
+    },
+    "passenger-b-seated": {
+      "source": "models/confident_professional.glb",
+      "source_metadata": {
+        "author": "XRProfXR (https://sketchfab.com/pinckneyb)",
+        "license": "CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)",
+        "source": "https://sketchfab.com/3d-models/confident-professional-4fc23a052ff04dd293142388ea89944a",
+        "title": "Confident Professional"
+      },
+      "source_sha256": "c0156e2c3b94f2f381bb0aa9dd9900616ff17438bfa3ffd26b39d12384f0105d",
+      "bytes": 2950120,
+      "sha256": "83f305ae5dd80ec507cff3522fd9227ec9eac153ec9cc3f2c2aa7d55de39828b",
+      "triangles": 59993,
+      "meshes": 1,
+      "primitives": 1,
+      "images": 1,
+      "animations": [],
+      "bounds_game": {
+        "min": [
+          -0.27088817954063416,
+          7.559778896393254e-05,
+          -0.7140070796012878
+        ],
+        "max": [
+          0.28444933891296387,
+          1.5624476671218872,
+          0.2345610111951828
+        ]
+      },
+      "seat_height": 0.57,
+      "axis": "Y up / -Z forward / hip local Z=0"
+    },
+    "passenger-c-seated": {
+      "source": "models/fashionable_skoof.glb",
+      "source_metadata": {
+        "author": "DENNISS75 (https://sketchfab.com/DENNISS75)",
+        "license": "CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)",
+        "source": "https://sketchfab.com/3d-models/fashionable-skoof-825e8250c7794e71b52179e6d24399c7",
+        "title": "fashionable skoof"
+      },
+      "source_sha256": "1b8a71bb4c63da5964afa63d026ce33daf338b0b321fbc18f583254e334815aa",
+      "bytes": 1536112,
+      "sha256": "b85eeb5956c3eecb4181de2662238611f784e3a9ae2f6602f9a84d49b71d3b54",
+      "triangles": 34998,
+      "meshes": 1,
+      "primitives": 1,
+      "images": 1,
+      "animations": [],
+      "bounds_game": {
+        "min": [
+          -0.2101227045059204,
+          0.0,
+          -0.6869551539421082
+        ],
+        "max": [
+          0.48460376262664795,
+          1.562082290649414,
+          0.32745876908302307
+        ]
+      },
+      "seat_height": 0.57,
+      "axis": "Y up / -Z forward / hip local Z=0"
+    }
+  }
+}

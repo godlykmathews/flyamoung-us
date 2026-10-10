@@ -1,7 +1,9 @@
 import { randomInt } from 'node:crypto';
 import type { Allegiance, Role } from '../../../shared/protocol.js';
 
-const ROLES: Role[] = ['Captain', 'First Officer', 'Engineer', 'Cabin Crew', 'Passenger'];
+// A small crew always has someone visibly assigned to cabin service. This job
+// selection remains independent from the separate hidden-allegiance shuffle.
+const ROLES: Role[] = ['Captain', 'Cabin Crew', 'Air Marshal', 'Engineer', 'First Officer', 'Passenger'];
 function shuffled<T>(values: readonly T[]): T[] {
   const result = [...values];
   for (let i = result.length - 1; i > 0; i--) {

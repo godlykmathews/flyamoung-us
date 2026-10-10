@@ -1,0 +1,71 @@
+.flight-experience { --experience-sage:#557767; }
+.experience-heading { padding:20px 0 2px; }
+.experience-heading h2 { font:500 30px/1.12 Georgia,serif; letter-spacing:-.025em; }
+.flight-experience section { margin-top:24px; }
+.experience-section-title { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
+.experience-section-title h3 { margin:0; font-size:13px; font-weight:600; }
+.experience-section-title>span { font:8px var(--mono); color:var(--muted); }
+.experience-menu { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.experience-menu button { border:1px solid #d6dedb; border-radius:10px; min-height:111px; background:#fdfdf8; padding:14px; display:flex; flex-direction:column; align-items:flex-start; gap:10px; text-align:left; }
+.experience-menu button>svg { color:#657f76; }
+.experience-menu strong { font-size:12px; }
+.experience-menu small { font-size:10px; color:#6a7d73; display:flex; gap:5px; align-items:center; }
+.experience-menu .received { background:#ebf3ee; opacity:1; }
+.experience-order { color:#315d75; padding:12px; border-left:2px solid #74988a; background:#eaf2ed; }
+.experience-order span { display:block; color:#6b7e76; font-size:10px; }
+.experience-activities { border:1px solid #d5dedf; border-radius:9px; overflow:hidden; }
+.experience-activities>div { display:flex; align-items:center; gap:10px; padding-left:14px; background:#fffdf8; }
+.experience-activities>div+div { border-top:1px solid #e0e5e2; }
+.experience-activities>div>svg { color:#648278; flex-shrink:0; }
+.experience-hold { width:100%; background:#fdfefc; border:1px solid #d1ded8; border-radius:7px; padding:12px; text-align:left; margin:5px 0; }
+.experience-activities .experience-hold { border:0; background:transparent; margin:0; padding:13px 12px; }
+.experience-hold>span { display:block; width:100%; }
+.experience-hold small,.experience-prompt small { display:block; font:7px var(--mono); color:#718477; letter-spacing:.07em; margin-bottom:6px; }
+.experience-hold strong { font-size:12px; font-weight:550; display:block; }
+.experience-track { display:block; background:#dce6e1; height:3px; border-radius:2px; margin-top:8px; overflow:hidden; }
+.experience-track>span { display:block; height:100%; background:#527d67; transition:width .12s linear; }
+.experience-priority { padding:13px; border-radius:9px; background:#fbf1dc; border:1px solid #ddc69b; margin-top:20px; }
+.experience-priority p { margin:8px 0; color:#806341; }
+.experience-note { display:flex; align-items:center; gap:10px; color:#885a32; font-size:11px; padding:12px; background:#fcf1df; margin:12px 0; }
+.experience-note svg { flex-shrink:0; }
+.experience-micro { font-size:10px; line-height:1.6; }
+.experience-covert { border-top:1px dashed #bf967e; padding-top:18px; }
+.experience-covert .experience-hold { background:#fcf0e9; border-color:#dfbcaa; }
+.experience-drills { margin-top:24px; border-top:1px solid #d3dedf; padding-top:17px; }
+.experience-drills summary { display:flex; align-items:center; gap:8px; cursor:pointer; font-size:12px; color:#41667d; }
+.experience-drills>div { display:grid; grid-template-columns:1fr 1fr; gap:7px; }
+.experience-drills button { background:#e9eff3; color:#3c6179; border:1px solid #b8cdd8; border-radius:5px; min-height:38px; font-size:10px; }
+.incident-status { position:absolute; z-index:4; left:29px; top:94px; max-width:285px; display:flex; align-items:flex-start; gap:12px; background:#fff8e9f5; border:1px solid #dfba74; box-shadow:0 4px 20px #442d1e16; border-radius:9px; padding:15px; text-align:left; color:#624a30; }
+.incident-status-icon { color:#9f6d27; padding-top:5px; }
+.incident-status>span:last-child { display:flex; flex-direction:column; gap:7px; }
+.incident-status small { font:8px var(--mono); letter-spacing:.07em; color:#95703c; }
+.incident-status strong { font-size:13px; }
+.incident-status>span>span { font-size:10px; line-height:1.6; }
+.incident-active .mission-strip { display:none; }
+.player-orders { margin:18px 0; }
+.player-orders>div { display:flex; align-items:center; gap:10px; border-bottom:1px solid var(--line); padding:12px 0; }
+.player-orders strong { display:block; font-size:11px; }
+.player-orders small { display:block; font-size:9px; color:var(--muted); margin-top:5px; }
+.player-orders button { margin-left:auto; border-radius:4px; padding:8px; color:#386677; background:#e5eff0; font-size:10px; }
+.player-threat-action { position:absolute; z-index:5; right:28px; bottom:180px; border-radius:6px; background:#f7e6de; color:#8a4433; padding:12px; display:flex; gap:8px; align-items:center; font-size:11px; }
+.flight-experience-drawer { width:370px; }
+@media(max-width:720px) { .incident-status { left:14px; top:76px; max-width:245px; padding:11px; }.flight-experience-drawer { width:min(370px,calc(100% - 28px)); }.player-threat-action { right:14px; bottom:182px; }.hud-actions {gap:4px}.hud-actions button {padding:0 8px}.hud-actions kbd {display:none} }
+@media(prefers-reduced-motion:reduce){.experience-track>span{transition:none}}
+.passenger-magazine { position:absolute; z-index:3; pointer-events:none; bottom:95px; left:50%; transform:translateX(-50%) rotate(-2deg); width:min(520px,85vw); display:grid; grid-template-columns:1fr 1fr; background:#fcf9ee; color:#385a5a; box-shadow:0 16px 45px #162f3d40; border-radius:4px 12px 12px 4px; }
+.passenger-magazine>div { padding:20px; }
+.passenger-magazine>div:first-child { border-right:1px solid #d8d9c9; background:#edf1e4; }
+.passenger-magazine span,.passenger-magazine small { font:7px var(--mono); letter-spacing:.12em; }
+.passenger-magazine strong { display:block; font:30px/1.08 Georgia,serif; margin-top:17px; }
+.passenger-magazine em { font-weight:normal; }
+.passenger-magazine svg { width:100%; height:80px; margin-top:10px; }
+.passenger-magazine h3 { font:24px Georgia,serif; margin:18px 0 10px; }
+.passenger-magazine p { font-size:11px; color:#718177; }
+.passenger-rest { position:absolute; z-index:3; pointer-events:none; bottom:125px; left:50%; transform:translateX(-50%); border:1px solid #f5eed4; background:#fbf8eddc; padding:17px 28px; border-radius:40px; display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:10px; width:min(400px,85vw); color:#667961; font:16px Georgia,serif; }
+.passenger-rest small { flex-basis:100%; text-align:center; font:8px var(--mono); }
+.mask-worn-indicator { position:absolute; z-index:4; top:76px; left:50%; transform:translateX(-50%); display:flex; gap:8px; align-items:center; background:#e4eee6ed; border:1px solid #94b39b; border-radius:30px; padding:8px 12px; font-size:10px; color:#436f50; }
+@media(max-width:700px) {.mask-worn-indicator {top:auto;bottom:255px}.passenger-magazine>div{padding:13px}.passenger-magazine strong {font-size:23px}.passenger-magazine h3 {font-size:20px}}
+.emergency-descent-overlay { position:absolute; z-index:4; inset:0; pointer-events:none; color:#f7f3df; background:linear-gradient(transparent 45%,#162a3dc9); padding:32px; display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-end; }
+.emergency-descent-overlay>span { position:absolute; top:30px; left:32px; font:9px var(--mono); letter-spacing:.12em; color:#405868; }
+.emergency-descent-overlay h2 { font:40px Georgia,serif; margin-bottom:8px; }
+.emergency-descent-overlay p { color:#e3e8e4; margin:0 0 20px; }
+.emergency-descent-overlay button { pointer-events:auto; }

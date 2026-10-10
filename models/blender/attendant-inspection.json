@@ -1,0 +1,128 @@
+[
+  {
+    "source": "client/public/models/characters/attendant.glb",
+    "valid": true,
+    "bytes": 930376,
+    "generator": "Khronos glTF Blender I/O v5.2.40",
+    "nodes": 19,
+    "meshes": 1,
+    "primitives": 1,
+    "meshInstances": 1,
+    "renderedPrimitives": 1,
+    "uniqueTriangles": 26000,
+    "sceneTriangles": 26000,
+    "materials": 1,
+    "materialNames": [
+      "Coloured airline uniform / skin"
+    ],
+    "textures": 0,
+    "images": [],
+    "requiredExtensions": [],
+    "usedExtensions": [],
+    "externalResources": [],
+    "dataUriResources": [],
+    "bounds": {
+      "min": [
+        -0.3899404838623251,
+        0.0002743251097854227,
+        -0.17704668837892715
+      ],
+      "max": [
+        0.3894613460484477,
+        1.699967384338379,
+        0.17698187020463138
+      ],
+      "dimensions": [
+        0.7794018299107728,
+        1.6996930592285935,
+        0.35402855858355853
+      ],
+      "units": "meters (glTF convention)"
+    },
+    "errors": [],
+    "warnings": [
+      "Bounds represent the base mesh pose; skinning/morph animation is not evaluated"
+    ],
+    "clips": [
+      {
+        "name": "Idle",
+        "duration": 2.0416666666666665
+      },
+      {
+        "name": "Walk",
+        "duration": 2.0416666666666665
+      },
+      {
+        "name": "Carry",
+        "duration": 2.0416666666666665
+      },
+      {
+        "name": "Serve",
+        "duration": 2.0416666666666665
+      }
+    ]
+  },
+  {
+    "source": "client/public/models/characters/attendant-player.glb",
+    "valid": true,
+    "bytes": 930408,
+    "generator": "Khronos glTF Blender I/O v5.2.40",
+    "nodes": 19,
+    "meshes": 1,
+    "primitives": 1,
+    "meshInstances": 1,
+    "renderedPrimitives": 1,
+    "uniqueTriangles": 26000,
+    "sceneTriangles": 26000,
+    "materials": 1,
+    "materialNames": [
+      "Coloured airline uniform / skin.001"
+    ],
+    "textures": 0,
+    "images": [],
+    "requiredExtensions": [],
+    "usedExtensions": [],
+    "externalResources": [],
+    "dataUriResources": [],
+    "bounds": {
+      "min": [
+        -0.3899404838623251,
+        0.0002743251097854227,
+        -0.17704668837892715
+      ],
+      "max": [
+        0.3894613460484477,
+        1.699967384338379,
+        0.17698187020463138
+      ],
+      "dimensions": [
+        0.7794018299107728,
+        1.6996930592285935,
+        0.35402855858355853
+      ],
+      "units": "meters (glTF convention)"
+    },
+    "errors": [],
+    "warnings": [
+      "Bounds represent the base mesh pose; skinning/morph animation is not evaluated"
+    ],
+    "clips": [
+      {
+        "name": "Idle",
+        "duration": 2.0416666666666665
+      },
+      {
+        "name": "Walk",
+        "duration": 2.0416666666666665
+      },
+      {
+        "name": "Carry",
+        "duration": 2.0416666666666665
+      },
+      {
+        "name": "Serve",
+        "duration": 2.0416666666666665
+      }
+    ]
+  }
+]

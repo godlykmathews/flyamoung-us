@@ -12,34 +12,36 @@
     "start": "node dist-server/server/src/index.js",
     "preview": "vite preview --host 0.0.0.0",
     "test": "node --import tsx --test tests/*.test.ts",
-    "test:integration": "node --import tsx tests/integration.ts"
+    "test:integration": "node --import tsx tests/integration.ts",
+    "assets:voice": "node scripts/prepare-voice.mjs",
+    "predev": "npm run assets:voice",
+    "prebuild": "npm run assets:voice"
   },
   "dependencies": {
-    "@colyseus/core": "~0.16.0",
-    "@colyseus/schema": "^3.0.0",
-    "@colyseus/ws-transport": "~0.16.0",
-    "colyseus.js": "~0.16.0",
-    "@react-three/fiber": "^9.0.0",
+    "@colyseus/core": "~0.17.52",
+    "@colyseus/schema": "^4.0.7",
+    "@colyseus/sdk": "~0.17.43",
+    "@colyseus/ws-transport": "~0.17.13",
     "@react-three/drei": "^10.0.0",
+    "@react-three/fiber": "^9.0.0",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "lucide-react": "^0.468.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "three": "^0.180.0",
-    "express": "^4.21.2",
-    "cors": "^2.8.5",
-    "lucide-react": "^0.468.0"
+    "three": "^0.180.0"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@types/three": "^0.180.0",
-    "@types/node": "^22.0.0",
-    "@types/express": "^4.17.21",
-    "@types/cors": "^2.8.17",
-    "typescript": "^5.8.3",
-    "tsx": "^4.19.0",
-    "vite": "^7.0.0",
     "@vitejs/plugin-react": "^4.5.0",
     "concurrently": "^9.1.2",
-    "@playwright/test": "^1.51.0"
+    "tsx": "^4.19.0",
+    "typescript": "^5.8.3",
+    "vite": "^7.0.0"
   }
 }

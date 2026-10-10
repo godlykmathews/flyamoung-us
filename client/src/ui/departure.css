@@ -1,0 +1,11 @@
+.departure-overlay{position:absolute;inset:0;z-index:5;pointer-events:none;color:#203247;background:linear-gradient(180deg,#e9f2f733,transparent 25%,transparent 65%,#20324722)}
+.departure-brand{position:absolute;left:5%;top:38px;font:600 12px var(--mono);letter-spacing:.2em}
+.departure-caption{position:absolute;left:5%;bottom:48px;width:150px}
+.departure-caption p{font:500 42px/1 'Barlow Condensed',sans-serif;color:#203247;margin:0 0 17px}
+.departure-progress{height:2px;background:#2949662b;overflow:hidden}
+.departure-progress:before{content:'';display:block;width:100%;height:100%;background:#28648c;transform-origin:left;animation:departure-progress 8s linear both}
+.departure-overlay>button{pointer-events:auto;position:absolute;right:5%;bottom:48px;border:1px solid #6a8fa955;border-radius:4px;padding:11px 19px;background:#f7fbffdf;backdrop-filter:blur(8px);font-size:12px;color:#294d6b}
+.departure-overlay>button:hover{background:#fff}
+@keyframes departure-progress{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@media(prefers-reduced-motion:reduce){.departure-progress:before{animation:none}}
+@media(max-width:600px){.departure-brand{top:25px}.departure-caption{bottom:30px;width:120px}.departure-caption p{font-size:34px}.departure-overlay>button{bottom:30px}}

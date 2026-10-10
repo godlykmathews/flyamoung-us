@@ -1,0 +1,14 @@
+Boeing 737 MAX 8 - Flydubai
+Author: SAIMON584Models (https://sketchfab.com/SAIMON584models)
+Source: https://sketchfab.com/3d-models/boeing-737-max-8-flydubai-3320025245764f5faf7720b81b16d939
+License: Creative Commons Attribution 4.0 International (CC BY 4.0)
+License URL: https://creativecommons.org/licenses/by/4.0/
+
+Provided by the project owner as models/boeing_737_max_8_-_flydubai.glb.
+Bundled as /models/boeing-737.glb, with its original embedded metadata intact.
+The GLB bytes are unchanged. FLIGHT 404 centers, scales and rotates a scene
+instance at runtime for presentation, and adds a flight path animation.
+The model's airline branding belongs to its respective owners; the author
+and airline do not endorse FLIGHT 404.
+
+SHA-256: 00ad6992b8465ec8b3e2aa5cc41ceacab41977db86a6b2adad6d7ca6accfaf7d

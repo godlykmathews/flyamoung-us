@@ -7,3 +7,5 @@ client/.env.local
 test-results/
 playwright-report/
 .DS_Store
+*.blend1
+*.blend2

@@ -1,0 +1,457 @@
+{
+  "author": "Original FLIGHT 404 Blender geometry, rigs and keyframed actions",
+  "source": "scripts/blender/add_safety_demonstrations.py",
+  "base_source": "models/blender/animated-crew.blend",
+  "blender": "5.2.2 LTS",
+  "clip_duration_seconds": 4,
+  "playback": "LoopOnce, clampWhenFinished; time sampled from authoritative demonstration elapsed seconds",
+  "coordinates": "metres, glTF +Y up, -Z forward",
+  "prop_mounts": {
+    "belt-left": "Left palm = HandL wrist world position + normalized hand bone direction * 0.04 m; move another character-forward 0.035 m. Keep prop world orientation equal to character yaw.",
+    "belt-right": "As belt-left using HandR.",
+    "oxygen-mask": "During 0.75\u20131.95 seconds move from right palm to face [0,1.605,-0.127]; thereafter hold against face. Origin at mask cup center.",
+    "life-vest-folded": "During 0.35\u20131.1 seconds place halfway between palms plus forward 0.025 m; remove when deployed vest appears.",
+    "life-vest": "At 1.1\u20131.6 seconds scale in onto sternum pivot [0,1.38,-0.103]; keep aligned to character yaw. Show through end.",
+    "exits": "No prop."
+  },
+  "preview_pose_samples": {
+    "SafetySeatbelt": {
+      "time": 2.75,
+      "left_wrist_blender": [
+        -0.02799999713897705,
+        0.260000079870224,
+        1.0099999904632568
+      ],
+      "right_wrist_blender": [
+        0.02799999713897705,
+        0.260000079870224,
+        1.0099999904632568
+      ]
+    },
+    "SafetyOxygen": {
+      "time": 2.5,
+      "left_wrist_blender": [
+        -0.15000006556510925,
+        0.23000001907348633,
+        1.3799998760223389
+      ],
+      "right_wrist_blender": [
+        0.028000036254525185,
+        0.17000004649162292,
+        1.5950000286102295
+      ]
+    },
+    "SafetyLifeVest": {
+      "time": 3.7,
+      "left_wrist_blender": [
+        -0.15059025585651398,
+        0.21059027314186096,
+        1.2940971851348877
+      ],
+      "right_wrist_blender": [
+        0.15059025585651398,
+        0.21059027314186096,
+        1.2940971851348877
+      ]
+    },
+    "SafetyExits": {
+      "time": 3.3,
+      "left_wrist_blender": [
+        -0.6100000143051147,
+        0.12000004947185516,
+        1.409999966621399
+      ],
+      "right_wrist_blender": [
+        0.6100000143051147,
+        0.12000004947185516,
+        1.409999966621399
+      ]
+    }
+  },
+  "assets": {
+    "models/animated/attendant-player.glb": {
+      "bytes": 1076544,
+      "triangles": 17814,
+      "skins": 1,
+      "animations": [
+        "Idle",
+        "Walk",
+        "Carry",
+        "Serve",
+        "Sit",
+        "Seated",
+        "Stand",
+        "Gesture",
+        "Brace",
+        "Dead",
+        "DeadStanding",
+        "Weapon",
+        "SafetySeatbelt",
+        "SafetyOxygen",
+        "SafetyLifeVest",
+        "SafetyExits"
+      ],
+      "clip_durations_seconds": {
+        "Idle": 2.0416666666666665,
+        "Walk": 1.25,
+        "Carry": 1.25,
+        "Serve": 2.0416666666666665,
+        "Sit": 1.25,
+        "Seated": 2.0416666666666665,
+        "Stand": 1.25,
+        "Gesture": 2.0416666666666665,
+        "Brace": 2.0416666666666665,
+        "Dead": 2.0416666666666665,
+        "DeadStanding": 1.625,
+        "Weapon": 2.0416666666666665,
+        "SafetySeatbelt": 4,
+        "SafetyOxygen": 4,
+        "SafetyLifeVest": 4,
+        "SafetyExits": 4
+      },
+      "sha256": "e2adbe941639fae0d34c8fce931bd528021f34253e271fdeeb71cb97d26bfd99"
+    },
+    "models/animated/attendant.glb": {
+      "bytes": 1076516,
+      "triangles": 17814,
+      "skins": 1,
+      "animations": [
+        "Idle",
+        "Walk",
+        "Carry",
+        "Serve",
+        "Sit",
+        "Seated",
+        "Stand",
+        "Gesture",
+        "Brace",
+        "Dead",
+        "DeadStanding",
+        "Weapon",
+        "SafetySeatbelt",
+        "SafetyOxygen",
+        "SafetyLifeVest",
+        "SafetyExits"
+      ],
+      "clip_durations_seconds": {
+        "Idle": 2.0416666666666665,
+        "Walk": 1.25,
+        "Carry": 1.25,
+        "Serve": 2.0416666666666665,
+        "Sit": 1.25,
+        "Seated": 2.0416666666666665,
+        "Stand": 1.25,
+        "Gesture": 2.0416666666666665,
+        "Brace": 2.0416666666666665,
+        "Dead": 2.0416666666666665,
+        "DeadStanding": 1.625,
+        "Weapon": 2.0416666666666665,
+        "SafetySeatbelt": 4,
+        "SafetyOxygen": 4,
+        "SafetyLifeVest": 4,
+        "SafetyExits": 4
+      },
+      "sha256": "c59ebc401afac6afb8945d061d124ac3b6fb97cbbf2c0b406a36564006ee4f30"
+    },
+    "models/animated/engineer.glb": {
+      "bytes": 1004748,
+      "triangles": 16208,
+      "skins": 1,
+      "animations": [
+        "Idle",
+        "Walk",
+        "Carry",
+        "Serve",
+        "Sit",
+        "Seated",
+        "Stand",
+        "Gesture",
+        "Brace",
+        "Dead",
+        "DeadStanding",
+        "Weapon",
+        "SafetySeatbelt",
+        "SafetyOxygen",
+        "SafetyLifeVest",
+        "SafetyExits"
+      ],
+      "clip_durations_seconds": {
+        "Idle": 2.0416666666666665,
+        "Walk": 1.25,
+        "Carry": 1.25,
+        "Serve": 2.0416666666666665,
+        "Sit": 1.25,
+        "Seated": 2.0416666666666665,
+        "Stand": 1.25,
+        "Gesture": 2.0416666666666665,
+        "Brace": 2.0416666666666665,
+        "Dead": 2.0416666666666665,
+        "DeadStanding": 1.625,
+        "Weapon": 2.0416666666666665,
+        "SafetySeatbelt": 4,
+        "SafetyOxygen": 4,
+        "SafetyLifeVest": 4,
+        "SafetyExits": 4
+      },
+      "sha256": "c7ec7fc40c761b186a72fbf6ce0b97461d804f1be516751500635d87b67ee931"
+    },
+    "models/animated/marshal.glb": {
+      "bytes": 965292,
+      "triangles": 15468,
+      "skins": 1,
+      "animations": [
+        "Idle",
+        "Walk",
+        "Carry",
+        "Serve",
+        "Sit",
+        "Seated",
+        "Stand",
+        "Gesture",
+        "Brace",
+        "Dead",
+        "DeadStanding",
+        "Weapon",
+        "SafetySeatbelt",
+        "SafetyOxygen",
+        "SafetyLifeVest",
+        "SafetyExits"
+      ],
+      "clip_durations_seconds": {
+        "Idle": 2.0416666666666665,
+        "Walk": 1.25,
+        "Carry": 1.25,
+        "Serve": 2.0416666666666665,
+        "Sit": 1.25,
+        "Seated": 2.0416666666666665,
+        "Stand": 1.25,
+        "Gesture": 2.0416666666666665,
+        "Brace": 2.0416666666666665,
+        "Dead": 2.0416666666666665,
+        "DeadStanding": 1.625,
+        "Weapon": 2.0416666666666665,
+        "SafetySeatbelt": 4,
+        "SafetyOxygen": 4,
+        "SafetyLifeVest": 4,
+        "SafetyExits": 4
+      },
+      "sha256": "ebca110cf534aacf4d59db15d95f5f4fde50ceb58e738aaa8f495e6a35af10bc"
+    },
+    "models/animated/passenger-a.glb": {
+      "bytes": 1000028,
+      "triangles": 16296,
+      "skins": 1,
+      "animations": [
+        "Idle",
+        "Walk",
+        "Carry",
+        "Serve",
+        "Sit",
+        "Seated",
+        "Stand",
+        "Gesture",
+        "Brace",
+        "Dead",
+        "DeadStanding",
+        "Weapon",
+        "SafetySeatbelt",
+        "SafetyOxygen",
+        "SafetyLifeVest",
+        "SafetyExits"
+      ],
+      "clip_durations_seconds": {
+        "Idle": 2.0416666666666665,
+        "Walk": 1.25,
+        "Carry": 1.25,
+        "Serve": 2.0416666666666665,
+        "Sit": 1.25,
+        "Seated": 2.0416666666666665,
+        "Stand": 1.25,
+        "Gesture": 2.0416666666666665,
+        "Brace": 2.0416666666666665,
+        "Dead": 2.0416666666666665,
+        "DeadStanding": 1.625,
+        "Weapon": 2.0416666666666665,
+        "SafetySeatbelt": 4,
+        "SafetyOxygen": 4,
+        "SafetyLifeVest": 4,
+        "SafetyExits": 4
+      },
+      "sha256": "5794c3198655e55bc6106526c4082f6179958257fb3021a8b94c9d1b11539976"
+    },
+    "models/animated/passenger-b.glb": {
+      "bytes": 1032444,
+      "triangles": 17026,
+      "skins": 1,
+      "animations": [
+        "Idle",
+        "Walk",
+        "Carry",
+        "Serve",
+        "Sit",
+        "Seated",
+        "Stand",
+        "Gesture",
+        "Brace",
+        "Dead",
+        "DeadStanding",
+        "Weapon",
+        "SafetySeatbelt",
+        "SafetyOxygen",
+        "SafetyLifeVest",
+        "SafetyExits"
+      ],
+      "clip_durations_seconds": {
+        "Idle": 2.0416666666666665,
+        "Walk": 1.25,
+        "Carry": 1.25,
+        "Serve": 2.0416666666666665,
+        "Sit": 1.25,
+        "Seated": 2.0416666666666665,
+        "Stand": 1.25,
+        "Gesture": 2.0416666666666665,
+        "Brace": 2.0416666666666665,
+        "Dead": 2.0416666666666665,
+        "DeadStanding": 1.625,
+        "Weapon": 2.0416666666666665,
+        "SafetySeatbelt": 4,
+        "SafetyOxygen": 4,
+        "SafetyLifeVest": 4,
+        "SafetyExits": 4
+      },
+      "sha256": "a5969112b4c311d715a364b86d89b5608a77d105245dbcc3cfd0dff5cc451f27"
+    },
+    "models/animated/passenger-c.glb": {
+      "bytes": 1015560,
+      "triangles": 16484,
+      "skins": 1,
+      "animations": [
+        "Idle",
+        "Walk",
+        "Carry",
+        "Serve",
+        "Sit",
+        "Seated",
+        "Stand",
+        "Gesture",
+        "Brace",
+        "Dead",
+        "DeadStanding",
+        "Weapon",
+        "SafetySeatbelt",
+        "SafetyOxygen",
+        "SafetyLifeVest",
+        "SafetyExits"
+      ],
+      "clip_durations_seconds": {
+        "Idle": 2.0416666666666665,
+        "Walk": 1.25,
+        "Carry": 1.25,
+        "Serve": 2.0416666666666665,
+        "Sit": 1.25,
+        "Seated": 2.0416666666666665,
+        "Stand": 1.25,
+        "Gesture": 2.0416666666666665,
+        "Brace": 2.0416666666666665,
+        "Dead": 2.0416666666666665,
+        "DeadStanding": 1.625,
+        "Weapon": 2.0416666666666665,
+        "SafetySeatbelt": 4,
+        "SafetyOxygen": 4,
+        "SafetyLifeVest": 4,
+        "SafetyExits": 4
+      },
+      "sha256": "e40a3ba3716780be41ae8104f40c3f11e3208b808f971623a35bd5ea012e2047"
+    },
+    "models/animated/pilot.glb": {
+      "bytes": 1055380,
+      "triangles": 17256,
+      "skins": 1,
+      "animations": [
+        "Idle",
+        "Walk",
+        "Carry",
+        "Serve",
+        "Sit",
+        "Seated",
+        "Stand",
+        "Gesture",
+        "Brace",
+        "Dead",
+        "DeadStanding",
+        "Weapon",
+        "SafetySeatbelt",
+        "SafetyOxygen",
+        "SafetyLifeVest",
+        "SafetyExits"
+      ],
+      "clip_durations_seconds": {
+        "Idle": 2.0416666666666665,
+        "Walk": 1.25,
+        "Carry": 1.25,
+        "Serve": 2.0416666666666665,
+        "Sit": 1.25,
+        "Seated": 2.0416666666666665,
+        "Stand": 1.25,
+        "Gesture": 2.0416666666666665,
+        "Brace": 2.0416666666666665,
+        "Dead": 2.0416666666666665,
+        "DeadStanding": 1.625,
+        "Weapon": 2.0416666666666665,
+        "SafetySeatbelt": 4,
+        "SafetyOxygen": 4,
+        "SafetyLifeVest": 4,
+        "SafetyExits": 4
+      },
+      "sha256": "97c1b5f966a64e8eadd773e3f098b4cf817a35e7345c871d0bb481a5b5b7c48e"
+    },
+    "models/animated/sidearm.glb": {
+      "bytes": 29128,
+      "triangles": 780,
+      "skins": 0,
+      "animations": [],
+      "clip_durations_seconds": {},
+      "sha256": "61cdb4e8ee479220e73ff5b28be4216c12da0df0282a404c1497ab68b1b9bdd9"
+    },
+    "models/safety/belt-left.glb": {
+      "bytes": 29776,
+      "triangles": 1048,
+      "skins": 0,
+      "animations": [],
+      "clip_durations_seconds": {},
+      "sha256": "a5c421ec10e91547e1447714e30543def6e1b3e556118218312ee8cd5074d0db"
+    },
+    "models/safety/belt-right.glb": {
+      "bytes": 24916,
+      "triangles": 860,
+      "skins": 0,
+      "animations": [],
+      "clip_durations_seconds": {},
+      "sha256": "ec1da3d36af9b72fd402347318938e4e959fcffd531ad385be028c8c3973de12"
+    },
+    "models/safety/life-vest-folded.glb": {
+      "bytes": 39436,
+      "triangles": 1364,
+      "skins": 0,
+      "animations": [],
+      "clip_durations_seconds": {},
+      "sha256": "6f9c44bc94f6aeab7bc2b066a2c7268a5f829229ee51e8997adc6c10dab3c8f4"
+    },
+    "models/safety/life-vest.glb": {
+      "bytes": 111696,
+      "triangles": 4160,
+      "skins": 0,
+      "animations": [],
+      "clip_durations_seconds": {},
+      "sha256": "79fa02693ad4e8fad7577abe825cbdfe47d34fea7ef54c2385952eac992be251"
+    },
+    "models/safety/oxygen-mask.glb": {
+      "bytes": 62736,
+      "triangles": 2332,
+      "skins": 0,
+      "animations": [],
+      "clip_durations_seconds": {},
+      "sha256": "407cce3287acbea20a1016cae24c55db46a91ad25e92c15c037dfba13b9db637"
+    }
+  }
+}

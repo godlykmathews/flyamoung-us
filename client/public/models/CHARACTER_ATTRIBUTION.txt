@@ -1,0 +1,84 @@
+CURRENT RUNTIME CHARACTERS — ORIGINAL BLENDER CAST
+
+All active people use /models/animated/*.glb: attendant, attendant-player,
+pilot, marshal, engineer and passenger-a/b/c. These are original FLIGHT 404
+models built from geometry in scripts/blender/build_animated_crew.py,
+with original materials, skeletons and sixteen action clips per character.
+scripts/blender/add_safety_demonstrations.py adds SafetySeatbelt, SafetyOxygen,
+SafetyLifeVest and SafetyExits to the twelve original movement/action clips.
+The sidearm and five /models/safety/ equipment props are original separate
+assets. They do not derive from the third-party scans listed below.
+Editable base: models/blender/animated-crew.blend.
+Current cast and safety equipment: models/blender/animated-crew-safety.blend.
+Current hashes: models/blender/safety-demonstration-manifest.json.
+
+HISTORICAL / RETAINED USER-SUPPLIED ASSETS
+
+The following files and credits are preserved from earlier prototypes.
+These supplied people are not used by the current character renderer.
+
+Indian Man In Kurta (2)
+Author: Pixel_Monster / ar.jethin
+Source: https://sketchfab.com/3d-models/indian-man-in-kurta-2-d691bd90c3e046aa970215a5c6a00a6d
+License recorded in the supplied GLB: SKETCHFAB Standard (https://sketchfab.com/licenses)
+
+User-supplied source: models/indian_man_in_kurta_2 copy.glb
+Runtime copy: crew-man.glb (source bytes preserved)
+SHA-256: 86d076787284a2ae2fafcb112e1cb3591954b9fb97ac031f44b95fcb7616483e
+64,662 triangles, 13 skinned meshes,
+13 materials, one skeleton, 18 embedded 512/1024px textures, no animation clips.
+
+Runtime changes: normalized to 1.78 m tall, feet centered on the floor, rotated
+to face player forward (-Z), lowered T-pose arms, procedural limb movement.
+The procedural walk is not an authored animation clip from the original asset.
+Geometry and materials are shared; each player has an independent skeleton.
+
+The project does not assert ownership of or grant a new license to this asset.
+Confirm the source asset's permitted distribution/use before publishing.
+
+
+USER-SUPPLIED CABIN CHARACTER DERIVATIVES
+
+License recorded in each source below: Creative Commons Attribution 4.0
+https://creativecommons.org/licenses/by/4.0/
+The original source GLBs are retained in models/. Their creators are credited
+below. FLIGHT 404 does not claim authorship of those source people.
+
+Flight Attendant Pin-Up — Ded Makar
+https://sketchfab.com/3d-models/flight-attendant-pin-up-a8e03b1a070a41aab1267d9b71f984e5
+Source: flight_attendant_pin-up.glb
+Derivatives: characters/attendant.glb, characters/attendant-player.glb
+Changes: metre-scale normalization, mesh reduction, navy/teal and burgundy
+uniform colouring, locally authored rig and Idle/Walk/Carry/Serve clips.
+The source scan did not include these animations.
+
+Pilot In Uniform — Alebor64
+https://sketchfab.com/3d-models/pilot-in-uniform-2860e37246324dc1a6444054c9b3abc4
+Source: pilot_in_uniform.glb
+Derivative: characters/pilot-seated.glb
+Changes: mesh reduction, scale normalization, seated pose, coloured uniform,
+skin/hair, and captain details. The source was static and untextured.
+
+Casual Portrait of a Mature Man — restore50
+https://sketchfab.com/3d-models/casual-portrait-of-a-mature-man-b5fb38849c2640628ecf17ecac244b53
+Source: casual_portrait_of_a_mature_man.glb
+Derivative: characters/passenger-a-seated.glb
+
+Confident Professional — XRProfXR
+https://sketchfab.com/3d-models/confident-professional-4fc23a052ff04dd293142388ea89944a
+Source: confident_professional.glb
+Derivative: characters/passenger-b-seated.glb
+
+fashionable skoof — DENNISS75
+https://sketchfab.com/3d-models/fashionable-skoof-825e8250c7794e71b52179e6d24399c7
+Source: fashionable_skoof.glb
+Derivative: characters/passenger-c-seated.glb
+
+Passenger changes: mesh reduction, metre-scale normalization, seated
+lower-body deformation, and texture optimization. Original textured
+appearance is retained. Seated poses are locally authored derivatives.
+
+Editable Blender sources and reproducible authoring scripts are supplied
+in models/blender/ and scripts/blender/. See docs/ASSETS.md for details.
+The service trays, cups, cutlery, food and folded blanket are original
+FLIGHT 404 Blender props, separate from these third-party characters.

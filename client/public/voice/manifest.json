@@ -1,0 +1,5 @@
+{
+  "welcome": "/voice/welcome.m4a",
+  "seatbelt": "/voice/seatbelt.mp3",
+  "chime": "/voice/service%20chime.mp3"
+}

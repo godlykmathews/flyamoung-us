@@ -1,0 +1,62 @@
+{
+  "tool": "5.2.2 LTS",
+  "source_preserved": true,
+  "assets": {
+    "attendant": {
+      "source": {
+        "author": "Ded Makar (https://sketchfab.com/kmkrtchyan70)",
+        "license": "CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)",
+        "source": "https://sketchfab.com/3d-models/flight-attendant-pin-up-a8e03b1a070a41aab1267d9b71f984e5",
+        "title": "Flight Attendant Pin-Up"
+      },
+      "bytes": 930376,
+      "triangles": 26000,
+      "sha256": "76ce64c0fda1054dc9265050481e6e235de3d27fa152977d06c2c0944b98e332",
+      "animations": [
+        "Idle",
+        "Walk",
+        "Carry",
+        "Serve"
+      ],
+      "skins": 1,
+      "clip_durations_seconds": {
+        "Idle": 2.0416666666666665,
+        "Walk": 2.0416666666666665,
+        "Carry": 2.0416666666666665,
+        "Serve": 2.0416666666666665
+      }
+    },
+    "attendant-player": {
+      "source": {
+        "author": "Ded Makar (https://sketchfab.com/kmkrtchyan70)",
+        "license": "CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)",
+        "source": "https://sketchfab.com/3d-models/flight-attendant-pin-up-a8e03b1a070a41aab1267d9b71f984e5",
+        "title": "Flight Attendant Pin-Up"
+      },
+      "bytes": 930408,
+      "triangles": 26000,
+      "sha256": "c4bc9808d983c6ba8e8079e5f5014e23d27a7677c32873a2c1d02499d2f2f95b",
+      "animations": [
+        "Idle",
+        "Walk",
+        "Carry",
+        "Serve"
+      ],
+      "skins": 1,
+      "clip_durations_seconds": {
+        "Idle": 2.0416666666666665,
+        "Walk": 2.0416666666666665,
+        "Carry": 2.0416666666666665,
+        "Serve": 2.0416666666666665
+      }
+    }
+  },
+  "source_file": "models/flight_attendant_pin-up.glb",
+  "coordinates": "metres; +Y up; -Z forward; 1.7 m standing",
+  "tray_mount": [
+    0.18,
+    1.015,
+    -0.37
+  ],
+  "pose_notes": "Restrained scan-derived gait. The source has crossed legs and one hand fused to the jacket; Carry and Serve animate the free arm only."
+}

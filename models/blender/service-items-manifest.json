@@ -1,0 +1,18 @@
+{
+  "coffee": {
+    "bytes": 130436,
+    "triangles": 3360
+  },
+  "water": {
+    "bytes": 105444,
+    "triangles": 2324
+  },
+  "meal": {
+    "bytes": 243464,
+    "triangles": 6004
+  },
+  "blanket": {
+    "bytes": 57672,
+    "triangles": 1284
+  }
+}

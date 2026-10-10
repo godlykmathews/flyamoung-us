@@ -1,0 +1,377 @@
+[
+  {
+    "source": "client/public/models/interior/flight-equipment.glb",
+    "valid": true,
+    "bytes": 823168,
+    "generator": "Khronos glTF Blender I/O v5.2.40",
+    "nodes": 11,
+    "meshes": 11,
+    "primitives": 11,
+    "meshInstances": 11,
+    "renderedPrimitives": 11,
+    "uniqueTriangles": 16692,
+    "sceneTriangles": 16692,
+    "materials": 11,
+    "materialNames": [
+      "Brushed aluminum",
+      "Embedded instrument / placard atlas",
+      "Emissive instrument displays",
+      "Gunmetal fasteners",
+      "Instrument panel",
+      "Ivory enamel",
+      "Navy polymer",
+      "Polished steel",
+      "Porcelain / paper",
+      "Rubber seals",
+      "Warning amber"
+    ],
+    "textures": 3,
+    "images": [
+      {
+        "name": "equipment-atlas",
+        "mimeType": "image/png",
+        "bytes": 194905,
+        "embedded": true,
+        "dimensions": [
+          2048,
+          2048
+        ]
+      }
+    ],
+    "requiredExtensions": [],
+    "usedExtensions": [],
+    "externalResources": [],
+    "dataUriResources": [],
+    "bounds": {
+      "min": [
+        -2.930000066757202,
+        0,
+        -13.449999630451202
+      ],
+      "max": [
+        2.866999352188105,
+        2.4600000381469727,
+        13.350001209845479
+      ],
+      "dimensions": [
+        5.796999418945307,
+        2.4600000381469727,
+        26.800000840296683
+      ],
+      "units": "meters (glTF convention)"
+    },
+    "errors": [],
+    "warnings": []
+  },
+  {
+    "source": "client/public/models/interior/checklist.glb",
+    "valid": true,
+    "bytes": 284616,
+    "generator": "Khronos glTF Blender I/O v5.2.40",
+    "nodes": 8,
+    "meshes": 8,
+    "primitives": 8,
+    "meshInstances": 8,
+    "renderedPrimitives": 8,
+    "uniqueTriangles": 2086,
+    "sceneTriangles": 2086,
+    "materials": 8,
+    "materialNames": [
+      "Brushed aluminum",
+      "Embedded instrument / placard atlas",
+      "Gunmetal fasteners",
+      "Navy polymer",
+      "Polished steel",
+      "Porcelain / paper",
+      "Rubber seals",
+      "status_lamp"
+    ],
+    "textures": 1,
+    "images": [
+      {
+        "name": "equipment-atlas",
+        "mimeType": "image/png",
+        "bytes": 194905,
+        "embedded": true,
+        "dimensions": [
+          2048,
+          2048
+        ]
+      }
+    ],
+    "requiredExtensions": [],
+    "usedExtensions": [],
+    "externalResources": [],
+    "dataUriResources": [],
+    "bounds": {
+      "min": [
+        -0.2150000035762787,
+        -0.30112807982653644,
+        -0.09864418411234961
+      ],
+      "max": [
+        0.2460000067949295,
+        0.30626777296394286,
+        0.13487803181060967
+      ],
+      "dimensions": [
+        0.4610000103712082,
+        0.6073958527904793,
+        0.2335222159229593
+      ],
+      "units": "meters (glTF convention)"
+    },
+    "errors": [],
+    "warnings": []
+  },
+  {
+    "source": "client/public/models/interior/navigation.glb",
+    "valid": true,
+    "bytes": 475460,
+    "generator": "Khronos glTF Blender I/O v5.2.40",
+    "nodes": 7,
+    "meshes": 7,
+    "primitives": 7,
+    "meshInstances": 7,
+    "renderedPrimitives": 7,
+    "uniqueTriangles": 7148,
+    "sceneTriangles": 7148,
+    "materials": 7,
+    "materialNames": [
+      "Embedded instrument / placard atlas",
+      "Emissive instrument displays",
+      "Gunmetal fasteners",
+      "Instrument panel",
+      "Porcelain / paper",
+      "Rubber seals",
+      "status_lamp"
+    ],
+    "textures": 3,
+    "images": [
+      {
+        "name": "equipment-atlas",
+        "mimeType": "image/png",
+        "bytes": 194905,
+        "embedded": true,
+        "dimensions": [
+          2048,
+          2048
+        ]
+      }
+    ],
+    "requiredExtensions": [],
+    "usedExtensions": [],
+    "externalResources": [],
+    "dataUriResources": [],
+    "bounds": {
+      "min": [
+        -0.2574999928474426,
+        -0.3155776878303631,
+        -0.13087154442348586
+      ],
+      "max": [
+        0.2574999928474426,
+        0.32487285970240665,
+        0.1558148277146973
+      ],
+      "dimensions": [
+        0.5149999856948853,
+        0.6404505475327698,
+        0.28668637213818315
+      ],
+      "units": "meters (glTF convention)"
+    },
+    "errors": [],
+    "warnings": []
+  },
+  {
+    "source": "client/public/models/interior/seatbelts.glb",
+    "valid": true,
+    "bytes": 424712,
+    "generator": "Khronos glTF Blender I/O v5.2.40",
+    "nodes": 15,
+    "meshes": 13,
+    "primitives": 13,
+    "meshInstances": 13,
+    "renderedPrimitives": 13,
+    "uniqueTriangles": 5100,
+    "sceneTriangles": 5100,
+    "materials": 8,
+    "materialNames": [
+      "Polished steel",
+      "Brushed aluminum",
+      "Navy polymer",
+      "Rubber seals",
+      "Embedded instrument / placard atlas",
+      "Gunmetal fasteners",
+      "Porcelain / paper",
+      "status_lamp"
+    ],
+    "textures": 1,
+    "images": [
+      {
+        "name": "equipment-atlas",
+        "mimeType": "image/png",
+        "bytes": 194905,
+        "embedded": true,
+        "dimensions": [
+          2048,
+          2048
+        ]
+      }
+    ],
+    "requiredExtensions": [],
+    "usedExtensions": [],
+    "externalResources": [],
+    "dataUriResources": [],
+    "bounds": {
+      "min": [
+        -0.31150001287460327,
+        -0.2094999998807907,
+        -0.017500000074505806
+      ],
+      "max": [
+        0.31150001287460327,
+        0.2094999998807907,
+        0.11049999942770228
+      ],
+      "dimensions": [
+        0.6230000257492065,
+        0.4189999997615814,
+        0.12799999950220808
+      ],
+      "units": "meters (glTF convention)"
+    },
+    "errors": [],
+    "warnings": []
+  },
+  {
+    "source": "client/public/models/interior/meals.glb",
+    "valid": true,
+    "bytes": 661100,
+    "generator": "Khronos glTF Blender I/O v5.2.40",
+    "nodes": 15,
+    "meshes": 15,
+    "primitives": 15,
+    "meshInstances": 15,
+    "renderedPrimitives": 15,
+    "uniqueTriangles": 14726,
+    "sceneTriangles": 14726,
+    "materials": 15,
+    "materialNames": [
+      "Baked bread",
+      "Brushed aluminum",
+      "Coffee",
+      "Embedded instrument / placard atlas",
+      "Emissive instrument displays",
+      "Gunmetal fasteners",
+      "Navy polymer",
+      "Polished steel",
+      "Porcelain / paper",
+      "Rice cream",
+      "Rubber seals",
+      "Salad greens",
+      "status_lamp",
+      "Tomato",
+      "Water blue"
+    ],
+    "textures": 3,
+    "images": [
+      {
+        "name": "equipment-atlas",
+        "mimeType": "image/png",
+        "bytes": 194905,
+        "embedded": true,
+        "dimensions": [
+          2048,
+          2048
+        ]
+      }
+    ],
+    "requiredExtensions": [],
+    "usedExtensions": [],
+    "externalResources": [],
+    "dataUriResources": [],
+    "bounds": {
+      "min": [
+        -0.6200000047683716,
+        0.0005000000819563866,
+        -0.2745000123977661
+      ],
+      "max": [
+        0.5955000519752502,
+        0.47200000286102295,
+        0.23900000657886267
+      ],
+      "dimensions": [
+        1.2155000567436218,
+        0.47150000277906656,
+        0.5135000189766288
+      ],
+      "units": "meters (glTF convention)"
+    },
+    "errors": [],
+    "warnings": []
+  },
+  {
+    "source": "client/public/models/interior/electrical.glb",
+    "valid": true,
+    "bytes": 531044,
+    "generator": "Khronos glTF Blender I/O v5.2.40",
+    "nodes": 20,
+    "meshes": 16,
+    "primitives": 16,
+    "meshInstances": 16,
+    "renderedPrimitives": 16,
+    "uniqueTriangles": 8396,
+    "sceneTriangles": 8396,
+    "materials": 8,
+    "materialNames": [
+      "Brushed aluminum",
+      "Embedded instrument / placard atlas",
+      "Emergency red",
+      "Gunmetal fasteners",
+      "Instrument panel",
+      "Polished steel",
+      "Rubber seals",
+      "status_lamp"
+    ],
+    "textures": 1,
+    "images": [
+      {
+        "name": "equipment-atlas",
+        "mimeType": "image/png",
+        "bytes": 194905,
+        "embedded": true,
+        "dimensions": [
+          2048,
+          2048
+        ]
+      }
+    ],
+    "requiredExtensions": [],
+    "usedExtensions": [],
+    "externalResources": [],
+    "dataUriResources": [],
+    "bounds": {
+      "min": [
+        -0.7699999809265137,
+        -0.550000011920929,
+        -0.026000000536441803
+      ],
+      "max": [
+        0.7699999809265137,
+        0.550000011920929,
+        0.17079567077124602
+      ],
+      "dimensions": [
+        1.5399999618530273,
+        1.100000023841858,
+        0.19679567130768783
+      ],
+      "units": "meters (glTF convention)"
+    },
+    "errors": [],
+    "warnings": []
+  }
+]
