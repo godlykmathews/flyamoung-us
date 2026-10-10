@@ -79,7 +79,7 @@ export function JourneyAssignments({ snapshot, me }: { snapshot: Snapshot; me?: 
     <div className="role-progress"><span>{snapshot.training ? 'TRAINING CHECKS' : 'YOUR FLIGHT CHECKS'}</span><strong>{completedChecks} / {checks.length}</strong></div>
     <div className="progress-track"><span style={{width: `${checks.length ? completedChecks / checks.length * 100 : 0}%`}}/></div>
     {mine.length > 0 && <><h3 className="duty-section-label">This stage · {snapshot.story.stage}</h3>{mine.map(o => renderDuty(o, true))}</>}
-    {!mine.length && !snapshot.training && <p className="duty-hint">Your team is preparing the next stage. Complete your checks and watch for incidents that need your role.</p>}
+    {!mine.length && !snapshot.training && <p className="duty-hint">Complete your station checks below and watch for incidents that need your role.</p>}
     <h3 className="duty-section-label">Your stations</h3>
     {checks.map(t => {
       const completed = snapshot.tasks.some(s => s.id === t.id && s.completed);

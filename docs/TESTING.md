@@ -10,6 +10,14 @@
 - Headless simulations with actual walking, held actions and task challenges completed cooperative journeys with 3–10 players in 101–114 simulated seconds. Separate runs completed after losing Captain, Cabin Crew, Engineer or First Officer, and with navigation/comms sabotage when no First Officer was assigned. These verify game progression, not human play speed or GPU performance.
 - Added role-specific cabin markers, small mounted check terminals and packing/matching/dial panels. The original five Blender equipment models are still loaded only by their five valid asset IDs; new checks do not request nonexistent GLBs.
 
+### Hosted browser verification
+
+Commit `36c5de2` deployed successfully to both Vercel and Render. A temporary three-player hosted room assigned Captain, Cabin Crew and Engineer and exposed all 18 public station states. The browser Captain privately received the terrorist allegiance; both temporary SDK peers privately received crew allegiance. Their shared snapshot contained no private allegiance data.
+
+The Captain's Tasks drawer showed exactly three personal checks and a separate read-only team checklist. Walking from the galley through the cabin into the flight deck produced only Captain station prompts. The new cruise instrument check rejected an incorrect dial reading, accepted four aligned readings and showed server-confirmed **1 / 3** progress. In a separate solo room, galley packing rejected a wrong placement, accepted the card-then-slot controls and showed **1 / 18** training checks complete. Screenshots: [instrument check](role-instrument-task.jpg), [packing check](role-packing-task.jpg). Browser logs contained no warnings or errors during the run. The follow-up changes only clarify the station-list hint; gameplay is unchanged.
+
+The embedded browser's drag gesture selected a packing card but did not complete its drop; card-then-slot completion is verified, while native drag-and-drop remains unconfirmed. This was a focused hosted role/minigame check, not a complete manual playthrough of all six roles. Temporary browser rooms and SDK peers were closed after testing.
+
 ## Flight incidents and passenger experience — 11 October 2026
 
 This earlier milestone records the incident feature and its original test totals.
