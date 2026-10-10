@@ -5,6 +5,7 @@ import { EQUIPMENT_IDS, type EquipmentId } from '../../../shared/tasks';
 import { RoleCheckStations } from './RoleCheckStations';
 import { TaskEquipment } from './TaskEquipment';
 import { BlenderInterior } from './BlenderInterior';
+import { SeatbackAds } from './SeatbackAds';
 
 const cube = new THREE.BoxGeometry(1, 1, 1);
 const unitPlane = new THREE.PlaneGeometry(1, 1);
@@ -69,6 +70,7 @@ function SeatPart({ position, scale, material, tilt=0 }: {position:Vec3;scale:Ve
 }
 function Seats() {
  return <group>
+  <Suspense fallback={null}><SeatbackAds fallback /></Suspense>
   <SeatPart position={[0,0.25,0.03]} scale={[0.65,0.47,0.61]} material={mat.dark}/>
   <SeatPart position={[0,0.53,-0.08]} scale={[0.88,0.18,0.96]} material={mat.teal}/>
   <SeatPart position={[0,1.06,0.4]} scale={[0.9,1.15,0.18]} material={mat.shell} tilt={-0.09}/>

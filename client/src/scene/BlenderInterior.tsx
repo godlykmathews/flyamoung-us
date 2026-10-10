@@ -1,8 +1,9 @@
-import { useEffect, useMemo } from 'react';
+import { Suspense, useEffect, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import { MathUtils, Mesh, MeshStandardMaterial, type Object3D } from 'three';
 import { EQUIPMENT_IDS, type EquipmentId } from '../../../shared/tasks';
+import { SeatbackAds } from './SeatbackAds';
 
 const ASSET_ROOT = '/models/interior/';
 type Vec3 = [number, number, number];
@@ -103,6 +104,7 @@ function TaskModel({ taskId, done }: { taskId: EquipmentId; done: boolean }) {
 export function BlenderInterior({ blackout, completedTasks }: { blackout: boolean; completedTasks: string[] }) {
   return <group>
     <CabinStructure blackout={blackout} />
+    <Suspense fallback={null}><SeatbackAds /></Suspense>
     <FixedEquipment />
     {EQUIPMENT_IDS.map(id => <TaskModel key={id} taskId={id} done={completedTasks.includes(id)} />)}
   </group>;

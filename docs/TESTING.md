@@ -1,5 +1,11 @@
 # Prototype validation
 
+## Seat-cover advertisements — 11 October 2026
+
+- Added the supplied `models/logo.webp` (**The Visa Guy**, 360 × 79) to all 20 passenger seat backs. Cream cover panels and rear-facing prints use the shared five-row/four-seat grid. The original image proportions and transparency are retained; one image and two instanced meshes serve the whole cabin. Blender and procedural interiors have separate mount offsets matching their respective backrest slopes.
+- `npm run build` passes TypeScript, Vite and server compilation. The existing bundle-size advisory remains. The branding file is included in the production output and returns HTTP 200 with `image/webp`; the source/public SHA-256 hashes match. `git diff --check` passes. No new tests were added for this decorative change.
+- Inspected a fresh native Firefox cabin screenshot at `http://localhost:2567/`, in a separate local training tab. Ads are visible down both sides of the cabin, aligned above the stowed trays, with readable close-range logos and no observed overlap. The user completed the gate-to-cabin movement while computer control paused; the screenshot is a current render observation, not a claim of an agent-driven full flight. The procedural fallback offsets were reviewed in source, without a separate forced-fallback browser run. This update is local and has not been deployed.
+
 ## Firefox character-rendering crash fix — 11 October 2026
 
 - Native Firefox at `http://localhost:5173/` reproduced the reported fallback. Its console identified `TypeError: can't access property "_cacheIndex", firstInactiveBinding is undefined` in `AnimationMixer._lendBinding`, reached from character action initialization during React effect replay. The subsequent context-lost warning followed renderer teardown; the fallback had incorrectly attributed this application exception to hardware acceleration.
