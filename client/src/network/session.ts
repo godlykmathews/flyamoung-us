@@ -22,15 +22,22 @@ export const session = {
    const joined = mode==='join' ? await client.joinById(code.trim(),{name}) : await client.create('flight',{name,training:mode==='training'});
    joined.reconnection.maxRetries = 0; // This prototype removes disconnected seats immediately.
    room=joined;
-   joined.onMessage('snapshot',(snapshot:Snapshot)=>publish({snapshot,...(state.safetyChallenge && (snapshot.phase!=='playing'||snapshot.safety.status!=='arranging'||snapshot.safety.operatorId!==joined.sessionId)?{safetyChallenge:null}:{})}));
-   joined.onMessage('secret',(secret:Secret)=>publish({secret}));
-   joined.onMessage('challenge',(challenge:TaskChallenge)=>publish({challenge}));
-   joined.onMessage('safetyChallenge',(safetyChallenge:SafetyChallenge)=>publish({safetyChallenge,error:''}));
-   joined.onMessage('error',(payload:unknown)=>publish({error:connectionErrorMessage(payload,'Action unavailable.')}));
-   joined.onError((_code,message)=>publish({error:connectionErrorMessage(message,'Connection error. Please reconnect to the flight.')}));
+   // A hosted socket can finish closing after the player has boarded another room.
+   const publishJoined = (next:Partial<SessionState>) => { if(room===joined)publish(next); };
+   joined.onMessage('snapshot',(snapshot:Snapshot)=>publishJoined({snapshot,...(state.safetyChallenge && (snapshot.phase!=='playing'||snapshot.safety.status!=='arranging'||snapshot.safety.operatorId!==joined.sessionId)?{safetyChallenge:null}:{})}));
+   joined.onMessage('secret',(secret:Secret)=>publishJoined({secret}));
+   joined.onMessage('challenge',(challenge:TaskChallenge)=>publishJoined({challenge}));
+   joined.onMessage('safetyChallenge',(safetyChallenge:SafetyChallenge)=>publishJoined({safetyChallenge,error:''}));
+   joined.onMessage('error',(payload:unknown)=>publishJoined({error:connectionErrorMessage(payload,'Action unavailable.')}));
+   joined.onError((_code,message)=>publishJoined({error:connectionErrorMessage(message,'Connection error. Please reconnect to the flight.')}));
    joined.onLeave(()=>{if(room===joined){room=null;publish({connected:false,snapshot:null,secret:null,challenge:null,safetyChallenge:null,error:'You left the flight. Create or join another flight to board again.'});}});
    publish({connected:true});
    joined.send('sync');
  },
- async leave(){const current=room;room=null;await current?.leave();publish({snapshot:null,secret:null,challenge:null,safetyChallenge:null,connected:false,error:''});}
+ async leave(){
+   const current=room;room=null;
+   publish({snapshot:null,secret:null,challenge:null,safetyChallenge:null,connected:false,error:''});
+   // Clear UI before waiting for the remote close acknowledgement; never reset a new room.
+   await current?.leave().catch(()=>undefined);
+ }
 };
