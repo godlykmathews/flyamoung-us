@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { FlightGame } from '../server/src/systems/game.js';
+import { useCabinFixture } from './helpers/cabin-fixture.js';
 import { JourneySimulation } from '../server/src/systems/story.js';
 import { canDoTask, canPerformDuty } from '../shared/duties.js';
 import { TASKS, canStand, hasCabinSight, SAFETY_DEMO_STATION } from '../shared/world.js';
@@ -11,6 +12,7 @@ function setup(training = false) {
   let now = 0;
   const events: Array<{ id: string; type: string; payload: any }> = [];
   const game = new FlightGame('ROLE', training, (id, type, payload) => events.push({ id, type, payload }), () => now);
+  useCabinFixture(game);
   for (let i = 0; i < (training ? 1 : 6); i++) { game.addPlayer(`p${i}`, `P${i}`); game.handle(`p${i}`, 'ready', { ready: true }); }
   game.handle('p0', 'start', {});
   // Unit fixtures arrange stage and positions directly to isolate authorization.
@@ -274,7 +276,8 @@ test('crew can report a sole specialist who sabotages their own system without i
     for (const voter of h.game.snapshot().players) h.game.handle(voter.id, 'vote', { targetId: terrorist.id });
     assert.equal(h.game.currentPhase, 'playing'); assert.equal(h.game.snapshot().sabotage, kind, 'voting does not erase the emergency');
     h.step(19000); assert.equal(h.game.snapshot().sabotage, kind);
-    h.step(1100); assert.equal(h.game.snapshot().sabotage, null); assert.equal(h.game.snapshot().winner, 'crew');
+    h.step(1100); assert.equal(h.game.snapshot().sabotage, null); assert.equal(h.game.snapshot().winner, null);
+    assert.equal(h.game.currentPhase, 'playing', 'reserve repair preserves the remaining duties and landing');
     assert.ok(h.game.snapshot().chat.some(message => message.text.includes(`NPC reserve ${role}`)));
     assert.equal(canDoTask(captain.role, station.id, false), false);
   }

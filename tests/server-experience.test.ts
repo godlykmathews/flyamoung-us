@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { ExperienceSimulation } from '../server/src/systems/experience.js';
 import { CabinSimulation } from '../server/src/systems/cabin.js';
 import { FlightGame } from '../server/src/systems/game.js';
+import { useCabinFixture } from './helpers/cabin-fixture.js';
 import { EXPERIENCE_ACTION_DURATIONS, type ExperienceActionKind, type ServiceItem, type Player, type Role } from '../shared/protocol.js';
 import { NPC_PASSENGER_SEATS, canStand } from '../shared/world.js';
 
@@ -10,6 +11,7 @@ function createHarness(count = 1) {
   let now = 0;
   const errors: Array<{ id: string; message: string }> = [];
   const game = new FlightGame('0420', count === 1, (id, type, payload) => { if (type === 'error') errors.push({ id, message: (payload as { message: string }).message }); }, () => now);
+  useCabinFixture(game);
   const ids = Array.from({ length: count }, (_, i) => `p${i}`);
   for (const id of ids) { game.addPlayer(id, id); game.handle(id, 'ready', { ready: true }); }
   game.handle(ids[0], 'start', {});
@@ -142,7 +144,8 @@ test('covert damage is private, held, proximity gated and cooldown limited; meet
   for (const id of h.ids.filter(id => id !== sab)) h.game.handle(id, 'vote', { targetId: 'skip' });
   assert.equal(h.game.currentPhase, 'playing');
   h.walk(crew, 0, 7.5); h.hold(crew, 'use-mask', crew); h.walk(crew, 0, 9.4); h.walk(crew, 1, 9.4); h.hold(crew, 'repair-pressure', 'pressure');
-  assert.equal(h.game.currentPhase, 'ended'); assert.equal(h.game.snapshot().winner, 'crew');
+  assert.equal(h.state().incident, 'none');
+  assert.equal(h.game.currentPhase, 'playing'); assert.equal(h.game.snapshot().winner, null, 'repairing the incident cannot skip the remaining flight and landing');
 });
 
 test('wrong deliveries agitate the exact passenger and nearby crew can calm them', () => {
@@ -171,7 +174,7 @@ test('pilot tampering needs a carried drink and clear nearby access, then first 
 });
 
 test('visible player attacks require draw time, range and cooldown; victims are immobile until held rescue', () => {
-  const h = harness(6, 'Cabin Crew'), sab = h.ids.find(id => h.game.getSecret(id).allegiance === 'saboteur')!, rescuer = h.game.snapshot().players.find(p => p.role === 'Cabin Crew')!.id, victim = h.ids.find(id => id !== sab && id !== rescuer)!;
+  const h = harness(6, 'Cabin Crew'), sab = h.ids.find(id => h.game.getSecret(id).allegiance === 'saboteur')!, rescuer = h.game.snapshot().players.find(p => p.role === 'Cabin Crew')!.id, victim = h.ids.find(id => id !== sab && id !== rescuer && h.me(id).role !== 'Captain')!;
   h.step(10100); h.walk(sab, 0, 4); h.walk(victim, 0, 4.8);
   h.reject(victim, 'attackPlayer', { playerId: sab }); h.reject(sab, 'attackPlayer', { playerId: victim });
   h.game.handle(sab, 'drawWeapon', { drawn: true }); h.reject(sab, 'attackPlayer', { playerId: victim }); h.step(650);
@@ -191,7 +194,8 @@ test('only the marshal can detain an exposed attacker with a held nearby interve
   h.reject(defender, 'experienceAction', { phase: 'begin', kind: 'disarm', targetId: sab });
   h.game.handle(sab, 'drawWeapon', { drawn: true }); h.step(650);
   h.reject(civilian, 'experienceAction', { phase: 'begin', kind: 'disarm', targetId: sab });
-  h.hold(defender, 'disarm', sab); assert.equal(h.me(sab).detained, true); assert.equal(h.me(sab).weaponDrawn, false); assert.equal(h.game.snapshot().winner, 'crew');
+  h.hold(defender, 'disarm', sab); assert.equal(h.me(sab).detained, true); assert.equal(h.me(sab).weaponDrawn, false); assert.equal(h.me(sab).equippedTool, null);
+  assert.equal(h.game.snapshot().winner, null); assert.equal(h.game.currentPhase, 'playing', 'the Marshal secures the threat; the crew must still land');
   assert.ok(!JSON.stringify(h.game.snapshot()).includes('"allegiance":'));
 });
 
@@ -209,7 +213,7 @@ test('weather practice reuses authoritative controls without skipping the curren
 test('a held wrong order cannot apply old progress to a replacement passenger request', () => {
   let now = 0;
   const cabin = new CabinSimulation(), npc = cabin.get('passenger-01')!;
-  const player: Player = { id: 'actor', name: 'Actor', color: '#ffffff', x: -1, z: -5.98, yaw: 0, role: 'Cabin Crew', ready: true, detained: false, model: 'attendant-player', weaponDrawn: false, carriedItem: 'coffee' };
+  const player: Player = { id: 'actor', name: 'Actor', color: '#ffffff', x: -1, z: -5.98, yaw: 0, role: 'Cabin Crew', ready: true, detained: false, model: 'attendant-player', weaponDrawn: false, equippedTool: null, carriedItem: 'coffee' };
   const experience = new ExperienceSimulation({ training: false, now: () => now, playing: () => true, players: () => [player], cabin, canAct: () => true, saboteur: () => true, covertReady: () => true, useCovert: () => {}, error: (_id, message) => assert.fail(message), announce: () => {}, creditService: () => {}, damage: () => {}, weather: () => false });
   experience.reset([player.id]);
   npc.request = { id: 'first-request', item: 'water', remaining: 1, claimedBy: null };

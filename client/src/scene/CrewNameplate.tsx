@@ -3,9 +3,9 @@ import { useFrame } from '@react-three/fiber';
 import { CanvasTexture, LinearFilter, Sprite, SRGBColorSpace, Vector3 } from 'three';
 import type { Player } from '../../../shared/protocol';
 
-type CrewNameplateProps = Pick<Player, 'name' | 'role' | 'color' | 'detained'>;
+type CrewNameplateProps = Pick<Player, 'name' | 'role' | 'color' | 'detained'> & { restrained?: boolean };
 
-export function CrewNameplate({ name, role, color, detained }: CrewNameplateProps) {
+export function CrewNameplate({ name, role, color, detained, restrained = false }: CrewNameplateProps) {
   const sprite = useRef<Sprite>(null);
   const world = useMemo(() => new Vector3(), []);
   const texture = useMemo(() => {
@@ -24,7 +24,7 @@ export function CrewNameplate({ name, role, color, detained }: CrewNameplateProp
     context.stroke();
     context.save();
     context.clip();
-    context.fillStyle = detained ? '#8895a0' : color;
+    context.fillStyle = detained ? '#8895a0' : restrained ? '#bc8745' : color;
     context.fillRect(0, 0, 512, 10);
     context.restore();
 
@@ -37,14 +37,14 @@ export function CrewNameplate({ name, role, color, detained }: CrewNameplateProp
     context.fillText(name, 256, 65);
     context.fillStyle = '#607184';
     context.font = '27px Arial, sans-serif';
-    context.fillText(detained ? 'DETAINED' : role, 256, 117, 460);
+    context.fillText(detained ? 'DETAINED' : restrained ? 'RESTRAINED · HELP NEEDED' : role, 256, 117, 460);
 
     const map = new CanvasTexture(canvas);
     map.colorSpace = SRGBColorSpace;
     map.minFilter = LinearFilter;
     map.generateMipmaps = false;
     return map;
-  }, [name, role, color, detained]);
+  }, [name, role, color, detained, restrained]);
 
   useEffect(() => () => { texture?.dispose(); }, [texture]);
   useFrame(({ camera }) => {

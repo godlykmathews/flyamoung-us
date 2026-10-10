@@ -1,5 +1,31 @@
 # Prototype validation
 
+## Boarding, manual flight and impostor tools — 11 October 2026
+
+- `npm test`: **100 tests pass**, including actual document collection and boarding, departure duties before takeoff, manual climb, landing and braking, unsuccessful rotation, crash progression after the round ends, restart cleanup, private inventory, single-use devices, disarm holds, rope rescue and unavailable-specialist coverage. Legacy cabin fixtures intentionally start in cruise so they continue testing their focused subsystem; separate journey tests exercise the real boarding flow.
+- Adversarial protocol tests verify that clients cannot forge boarding receipts or telemetry, acquire another player's inventory, attack people still in the terminal, pause disarm time while consuming a bomb timer, or bypass the reserve pilot's emergency interlocks. Meetings pause the flight/device/restraint simulation and clear held security actions. Public chat no longer confirms a detained or disconnected player's hidden allegiance.
+- `npm run test:ui`: **36 Node-rendered UI checks pass**, covering document/scan proximity, role-specific paperwork, pilot controls and readiness, disabled controls, private tool visibility, valid target selection, rescue/disarm permissions and duplicate overlay prevention. This is server-rendered markup testing, not browser input or GPU verification.
+- **All four live Colyseus scenarios pass** against an isolated source server on port 2572: three-player multiplayer roles/service/safety/sabotage/voting, six-player orders/incidents/attack/rescue, ten-client movement/privacy/disconnect, and the complete solo journey. The solo run collects documents, boards, performs departure duties and the timed demonstration, manually takes off, completes service/weather/pressure recovery, manually lands into `arrived` with a crew victory, and restarts with cleared boarding receipts. A takeoff-to-cruise NPC timer bug found in the live run was fixed and the full solo scenario rerun successfully. The final shared reserve-security timer was also verified by deterministic tests. Temporary clients and the isolated server were closed afterward.
+- `npm run build` passes TypeScript, Vite production compilation and the Node server build. The existing Vite large-chunk advisory remains: the main client bundle is about 1.51 MB / 432 KB gzip before model downloads.
+- An HTTP smoke check against the isolated server on port 2572 passes for `/health`, the production page and all eleven journey GLBs, including their binary glTF headers.
+- The final compiled app is running locally on **port 2567**. A production smoke check passes for the new client bundle, `/health`, a real Colyseus room, four-digit code, ready/start and the uncompleted authoritative boarding roster. The temporary room was closed after testing.
+- All **11 new Blender GLBs** pass the project's inspector with **zero errors and zero warnings**. Total exported geometry is **36,024 triangles / 1,099,052 bytes**. The original editable `.blend`, reproduction script, hashes and static inspection receipt are retained. Actual Cycles asset renders were inspected; they are not screenshots of the game.
+
+### Visual verification limit
+
+The browser retained a saved site permission block after the user initially enabled testing. The user then explicitly chose **“Finish with automated tests.”** No new browser playthrough, WebGL screenshot, audio playback check or hosted visual check is claimed for this milestone. The new terminal, aircraft control framing, hand props and sea impact still need a browser visual pass. Earlier screenshots and hosted checks below belong to earlier builds.
+
+### Manual playthrough for this build
+
+1. Run `npm run dev`, open the local frontend and start Solo practice. Dismiss the role card, walk to the Gate 04 desk, review the documents and collect them. Walk to the scanner and press E to board.
+2. Use Tasks to find the departure duties. Secure the trolley, return standing passengers to their seats, and arrange **seatbelt → oxygen mask → life vest → exits** at the front cabin station. Complete the assigned departure checks.
+3. Walk to the cockpit and select Begin takeoff. Release brakes, raise thrust, and hold Nose up once airspeed exceeds 135 kt. Retract the gear after liftoff and climb above 600 ft. All clients should enter cruise together.
+4. Continue service, weather and pressure response, then complete the approach duties. Return to the cockpit and select Begin approach. Keep wings level, lower the gear, target 110–150 kt and descend. After touchdown set thrust to idle and apply brakes; crew success appears after the aircraft stops.
+5. In multiplayer, check that exactly one client receives the private kit and concealed characters look alike. Equipped tools must be visible. A nearby knife attack on the Captain or seated pilot causes a crash; rope affects other human players and permits rescue. A planted case can be secured by an Engineer or Marshal with a six-second hold. Otherwise its 60-second timer causes the ocean ending.
+6. Check narrow layouts, keyboard/pointer release, focus loss, reduced motion, audio opt-in, frame rate and console output. These are pending manual checks, not recorded browser results.
+
+Earlier milestone evidence is preserved below.
+
 ## Exclusive roles and flight checks — 11 October 2026
 
 - `npm test`: **84 tests pass**. New coverage checks exactly one hidden terrorist, three distinct stations per role, permission checks at start and completion, stolen challenge tokens, forged public roles, held-action permission changes, service pickup versus delivery, private safety preparation, early check completion and unavailable-role reserve coverage.

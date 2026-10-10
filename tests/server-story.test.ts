@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { FlightGame } from '../server/src/systems/game.js';
+import { useCabinFixture } from './helpers/cabin-fixture.js';
 import { JourneySimulation } from '../server/src/systems/story.js';
 import { reserveRoomCode, releaseRoomCode } from '../server/src/systems/roomCodes.js';
 import { INTERACTION_STATIONS, NPC_PASSENGER_SEATS, SERVICE_GALLEY } from '../shared/world.js';
@@ -11,6 +12,7 @@ function harness(count = 1) {
   const errors: string[] = [];
   let safetyChallenge: SafetyChallenge | null = null;
   const game = new FlightGame('1234', count === 1, (_id, type, data) => { if (type === 'error') errors.push((data as { message: string }).message); if (type === 'safetyChallenge') safetyChallenge = data as SafetyChallenge; }, () => now);
+  useCabinFixture(game);
   const ids = Array.from({ length: count }, (_, i) => `p${i}`), id = ids[0];
   for (const id of ids) { game.addPlayer(id, id); game.handle(id, 'ready', { ready: true }); }
   game.handle(id, 'start', {});
@@ -106,7 +108,7 @@ test('flight control rejects stale, remote and non-finite input; sustained corre
   assert.equal(h.game.snapshot().story.turbulence.operatorId, null);
 });
 
-test('solo crew can complete the whole story through service, seating, equipment and flight controls', () => {
+test('solo crew completes cabin duties and then lands through authoritative pilot controls', () => {
   const h = harness(); h.secureCart(); h.walk(0, h.me().z); h.guideAll(); h.safetyDemo();
   assert.equal(h.game.snapshot().story.stage, 'service');
   // Wait for a fresh request, then physically fetch and deliver it before AI priority expires.
@@ -136,6 +138,19 @@ test('solo crew can complete the whole story through service, seating, equipment
   h.step(6100, () => h.game.handle(h.id, 'experienceAction', { phase: 'maintain' }));
   assert.equal(h.game.snapshot().story.stage, 'approach');
   h.walk(0, 9.4); h.walk(0, -8.5); h.hold('cabin-check', 'cabin-check');
+  assert.equal(h.game.snapshot().operations.landingReady, true);
+  assert.equal(h.game.snapshot().winner, null, 'finishing cabin tasks cannot replace the manual landing');
+  h.walk(0, -11.6);
+  h.game.handle(h.id, 'startLanding', {});
+  assert.equal(h.game.snapshot().operations.stage, 'landing');
+  for (let frame = 0; frame < 2000 && h.game.currentPhase === 'playing'; frame++) {
+    const touchdown = h.game.snapshot().operations.altitude === 0;
+    h.game.handle(h.id, 'aircraftControl', { throttle: touchdown ? 0 : .32, pitch: touchdown ? 0 : -.12, roll: 0, gearDown: true, brakes: touchdown });
+    h.step(50);
+  }
+  assert.equal(h.game.snapshot().operations.stage, 'arrived');
+  assert.equal(h.game.snapshot().operations.gearDown, true);
+  assert.equal(h.game.snapshot().operations.airspeed, 0);
   assert.equal(h.game.snapshot().winner, 'crew'); assert.equal(h.game.snapshot().phase, 'ended');
   assert.ok(h.game.snapshot().remaining > 0); assert.ok(INTERACTION_STATIONS.length === 3);
 });

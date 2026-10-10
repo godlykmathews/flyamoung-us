@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { Client, type Room } from '@colyseus/sdk';
 import { checkFlightServer } from '../client/src/network/connection.js';
-import { SAFETY_INSTRUCTIONS, SAFETY_STEP_DURATIONS, type Player, type Secret, type Snapshot, type TaskChallenge, type SafetyChallenge } from '../shared/protocol.js';
+import { SAFETY_INSTRUCTIONS, SAFETY_STEP_DURATIONS, BOARDING_DOCUMENTS, BOARDING_ENTRANCE, type Player, type Secret, type Snapshot, type TaskChallenge, type SafetyChallenge } from '../shared/protocol.js';
 import { canStand, NPC_PASSENGER_SEATS, SERVICE_GALLEY, SAFETY_DEMO_STATION, TASKS, WALK_SPEED } from '../shared/world.js';
 
 const endpoint = process.env.COLYSEUS_URL || 'ws://localhost:2567';
@@ -94,7 +94,7 @@ function assertPrivateSnapshots(peers: Peer[]) {
   for (const peer of peers) {
     for (const snapshot of peer.snapshots) {
       const serialized = JSON.stringify(snapshot);
-      for (const key of ['allegiance', 'teammates', 'secrets', 'taskChallenges', 'token', 'sequence', 'killCooldown', 'killReadyAt']) {
+      for (const key of ['allegiance', 'teammates', 'secrets', 'taskChallenges', 'token', 'sequence', 'killCooldown', 'killReadyAt', 'inventory']) {
         assert.equal(serialized.includes(`"${key}":`), false, `public snapshot leaked ${key}`);
       }
     }
@@ -136,7 +136,8 @@ async function multiplayerScenario() {
   loyal.forEach(peer => assert.deepEqual(peer.secret!.teammates, []));
   loyal.forEach(peer => assert.deepEqual(peer.secret!.objectives, []));
   assert.equal(host.snapshot!.npcs.filter(npc => npc.kind === 'passenger').length, 12);
-  assert.equal(host.snapshot!.players.filter(player => player.model === 'attendant-player').length, 1);
+  assert.ok(host.snapshot!.players.every(player => player.model === 'passenger-a'));
+  await Promise.all(peers.map(board));
   assertPrivateSnapshots(peers);
 
   const actor = peers.find(peer => peer.me.role === 'Cabin Crew')!, engineer = peers.find(peer => peer.me.role === 'Engineer')!, loyalActor = loyal[0]!;
@@ -193,21 +194,15 @@ async function multiplayerScenario() {
   await until(() => peers.every(peer => peer.snapshot?.phase === 'meeting'), 'emergency meeting');
   await expectRejection(actor, 'vote', { targetId: 'missing-player' }, 'invalid vote target rejected');
   peers.forEach(peer => peer.send('vote', { targetId: saboteur.room.sessionId }));
-  await until(() => host.snapshot?.phase === 'ended', 'majority detains last saboteur');
-  assert.equal(host.snapshot!.winner, 'crew');
-  assert.equal(host.snapshot!.players.find(player => player.id === saboteur.room.sessionId)?.detained, true);
+  await until(() => host.snapshot?.phase === 'playing' && host.snapshot.players.find(player => player.id === saboteur.room.sessionId)?.detained, 'majority detains last saboteur without skipping landing');
+  assert.equal(host.snapshot!.winner, null);
   assertPrivateSnapshots(peers);
-
-  await expectRejection(second, 'restart', {}, 'only host can restart');
-  host.send('restart');
-  await until(() => peers.every(peer => peer.snapshot?.phase === 'lobby'), 'round restarts into lobby');
-  assert.equal(host.snapshot!.players.some(player => player.ready || player.detained), false);
-  assert.equal(host.snapshot!.tasks.some(task => task.completed), false);
+  await expectRejection(host, 'restart', {}, 'unfinished flight cannot restart');
   await host.leave();
   await until(() => second.snapshot?.players.length === 2 && second.snapshot.hostId !== host.room.sessionId, 'disconnect transfers host');
   assert.ok(second.snapshot!.players.some(player => player.id === second.snapshot!.hostId));
   await Promise.all([second.leave(), third.leave()]);
-  console.log('PASS: ready/start, service delivery, vulnerable AI, private kill/tamper/disruption objectives, sabotage/repair, chat, votes, restart, host migration');
+  console.log('PASS: ready/start, service delivery, vulnerable AI, boarding and private kill/tamper/disruption objectives, sabotage/repair, chat, votes, landing victory interlock, host migration');
 }
 
 async function trainingScenario() {
@@ -216,6 +211,7 @@ async function trainingScenario() {
   await until(() => pilot.me.ready, 'training pilot ready');
   pilot.send('start');
   await until(() => pilot.snapshot?.phase === 'playing' && pilot.secret?.allegiance === 'crew', 'solo training starts without saboteur');
+  await board(pilot);
   await expectRejection(pilot, 'completeTask', { taskId: 'checklist', token: 'forged', sequence: [0, 1, 2, 3] }, 'forged challenge rejected');
 
   const practiceTasks = TASKS.filter(task => ['checklist', 'navigation', 'seatbelts', 'meals', 'electrical'].includes(task.id));
@@ -232,8 +228,10 @@ async function trainingScenario() {
   await holdAction(pilot, 'secure-cart', 'service-cart', 3200);
   await guideStanding(pilot);
   await completeSafetyDemo(pilot);
-  await until(() => pilot.snapshot?.story.stage === 'service', 'departure transitions to service');
+  await flyTakeoff(pilot);
+  await until(() => pilot.snapshot?.story.stage === 'service', 'takeoff transitions to cruise service');
   await serveRequest(pilot, true);
+  if (pilot.snapshot?.story.stage === 'service' && pilot.snapshot.npcs.some(npc => npc.needsSeat)) await guideStanding(pilot);
   await until(() => pilot.snapshot?.story.stage === 'turbulence', 'human service advances story');
   await guideStanding(pilot);
   await moveTo(pilot, 0, pilot.me.z); await moveTo(pilot, 0, 12.3); await moveTo(pilot, 1, 12.3);
@@ -253,12 +251,50 @@ async function trainingScenario() {
   }
   assert.equal(pilot.snapshot!.story.stage, 'approach');
   await moveTo(pilot, 0, -8.5); await holdAction(pilot, 'cabin-check', 'cabin-check', 4200);
-  await until(() => pilot.snapshot?.phase === 'ended', 'full story ends training round');
+  await until(() => pilot.snapshot?.operations.landingReady, 'arrival checks unlock landing');
+  assert.equal(pilot.snapshot!.winner, null);
+  await flyLanding(pilot);
+  await until(() => pilot.snapshot?.phase === 'ended', 'manual landing ends training round');
   assert.equal(pilot.snapshot!.winner, 'crew');
   assert.equal(pilot.snapshot!.tasks.filter(task => task.completed).length, practiceTasks.length);
   assertPrivateSnapshots([pilot]);
+  pilot.send('restart'); await until(() => pilot.snapshot?.phase === 'lobby', 'arrived flight restarts');
+  assert.ok(pilot.snapshot!.operations.roster.every(member => !member.boarded && !member.documentsReceived));
   await pilot.leave();
   console.log('PASS: solo training, five supporting stations, safety card arrangement and timed demonstration, sustained world actions, walking/seated passengers, human service, flight control and full journey victory');
+}
+
+
+async function board(peer: Peer) {
+  assert.equal(peer.snapshot!.operations.stage, 'boarding');
+  await moveTo(peer, BOARDING_DOCUMENTS.x, BOARDING_DOCUMENTS.z);
+  peer.send('boardingAction', { kind: 'documents' });
+  await until(() => peer.snapshot?.operations.roster.find(member => member.playerId === peer.room.sessionId)?.documentsReceived, 'documents collected');
+  await moveTo(peer, BOARDING_ENTRANCE.x, BOARDING_ENTRANCE.z);
+  peer.send('boardingAction', { kind: 'board' });
+  await until(() => peer.snapshot?.operations.roster.find(member => member.playerId === peer.room.sessionId)?.boarded, 'player boarded into cabin');
+}
+async function flyTakeoff(peer: Peer) {
+  await moveTo(peer, 0, peer.me.z); await moveTo(peer, 0, -11.6);
+  peer.send('startTakeoff'); await until(() => peer.snapshot?.operations.stage === 'takeoff', 'Captain starts takeoff after checks');
+  const deadline = Date.now() + 60_000;
+  while (peer.snapshot?.operations.stage === 'takeoff') {
+    assert.ok(Date.now() < deadline, 'manual takeoff exceeded expected duration');
+    const op = peer.snapshot.operations;
+    peer.send('aircraftControl', { throttle: 1, pitch: op.airspeed >= 135 ? .42 : 0, roll: 0, gearDown: op.altitude < 50, brakes: false }); await sleep(100);
+  }
+  assert.equal(peer.snapshot!.operations.stage, 'cruise');
+}
+async function flyLanding(peer: Peer) {
+  await moveTo(peer, 0, peer.me.z); await moveTo(peer, 0, -11.6);
+  peer.send('startLanding'); await until(() => peer.snapshot?.operations.stage === 'landing', 'Captain starts landing after checks');
+  const deadline = Date.now() + 80_000;
+  while (peer.snapshot?.operations.stage === 'landing') {
+    assert.ok(Date.now() < deadline, 'manual landing exceeded expected duration');
+    const grounded = peer.snapshot.operations.altitude === 0;
+    peer.send('aircraftControl', { throttle: grounded ? 0 : .32, pitch: grounded ? 0 : -.12, roll: 0, gearDown: true, brakes: grounded }); await sleep(100);
+  }
+  assert.equal(peer.snapshot!.operations.stage, 'arrived');
 }
 
 async function holdExperience(peer: Peer, kind: string, targetId: string, milliseconds: number) {
@@ -274,8 +310,9 @@ async function experienceScenario() {
   const peers = [host, ...await Promise.all(Array.from({ length: 5 }, (_, i) => join(host, `Crew ${i + 2}`)))]; peers.forEach(peer => peer.send('ready', { ready: true }));
   await until(() => host.snapshot?.players.every(player => player.ready), 'experience crew ready'); host.send('start');
   await until(() => peers.every(peer => peer.snapshot?.phase === 'playing' && peer.secret) && peers.some(peer => peer.secret?.allegiance === 'saboteur'), 'experience flight started');
+  await Promise.all(peers.map(board));
   const sab = peers.find(peer => peer.secret?.allegiance === 'saboteur')!, crew = peers.find(peer => peer.me.role === 'Cabin Crew')!, passenger = peers.find(peer => peer.me.role === 'Passenger')!, engineer = peers.find(peer => peer.me.role === 'Engineer')!;
-  const victim = peers.find(peer => peer !== sab && peer !== crew)!;
+  const victim = peers.find(peer => peer !== sab && peer !== crew && peer.me.role !== 'Captain')!;
   await expectRejection(crew, 'incidentDrill', { kind: 'smoke' }, 'multiplayer cannot invoke practice drills');
   for (const item of ['water', 'coffee', 'meal', 'blanket']) {
     passenger.send('requestService', { item }); await until(() => crew.snapshot?.experience.players[passenger.room.sessionId].order?.item === item, `${item} order replicated`);
@@ -330,7 +367,8 @@ async function experienceScenario() {
     await moveTo(engineer, 0, engineer.me.z); await moveTo(engineer, 0, 9.4); await moveTo(engineer, 1, 9.4);
     await holdExperience(engineer, 'repair-pressure', 'pressure', 6200);
   }
-  await until(() => peers.every(peer => peer.snapshot?.phase === 'ended' && peer.snapshot.winner === 'crew'), 'resolved pressure and attacker detention secure flight', 25_000);
+  await until(() => peers.every(peer => peer.snapshot?.experience.incident === 'none'), 'resolved pressure after attacker detention', 25_000);
+  assert.ok(peers.every(peer => peer.snapshot?.phase === 'playing' && peer.snapshot.winner === null), 'security victory cannot skip actual landing');
   assertPrivateSnapshots(peers); await Promise.all(peers.map(peer => peer.leave()));
   console.log('PASS: four player orders, human delivery, reading, covert privacy, pressure/masks, assistance, player attack/rescue, role-gated disarm and emergency victory gating');
 }
@@ -421,7 +459,7 @@ async function concurrencyScenario() {
     const distance = Math.hypot(peer.me.x - starts[index]!.x, peer.me.z - starts[index]!.z);
     assert.ok(distance > 1.5, `client ${index} moved too slowly; check simulation-clock timing`);
     assert.ok(distance <= WALK_SPEED * elapsed + 0.3, `client ${index} bypassed server movement speed`);
-    assert.equal(canStand(peer.me.x, peer.me.z), true);
+    assert.ok(peer.me.x >= -5 && peer.me.x <= 5 && peer.me.z >= 4 && peer.me.z <= 14, 'terminal movement respects authoritative bounds');
   });
   const movingPeer = peers[1]!;
   const replicated = host.snapshot!.players.find(player => player.id === movingPeer.room.sessionId)!;

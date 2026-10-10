@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { FlightGame } from '../server/src/systems/game.js';
+import { useCabinFixture } from './helpers/cabin-fixture.js';
 import { assignRoles } from '../server/src/systems/roles.js';
 import type { TaskChallenge } from '../shared/protocol.js';
 import { canStand } from '../shared/world.js';
@@ -9,6 +10,7 @@ function setup(count = 3, training = false) {
   let now = 0;
   const events: { id: string; type: string; payload: any }[] = [];
   const game = new FlightGame('TEST', training, (id, type, payload) => events.push({ id, type, payload }), () => now);
+  useCabinFixture(game);
   const ids = Array.from({ length: count }, (_, i) => `player-${i}`);
   for (const id of ids) { game.addPlayer(id, id); game.handle(id, 'ready', { ready: true }); }
   const advance = (milliseconds: number) => { for (let elapsed = 0; elapsed < milliseconds; elapsed += 50) { now += 50; game.step(0.05); } };
@@ -51,7 +53,7 @@ test('ten human-sized crew spawn in the aisle without overlapping, including rep
   game.handle('replacement', 'ready', { ready: true });
   game.handle(ids[0], 'start', {});
   assert.equal(game.currentPhase, 'playing');
-  advance(360100);
+  advance(720100);
   assert.equal(game.currentPhase, 'ended');
   game.handle(ids[0], 'restart', {});
   assert.equal(game.currentPhase, 'lobby');
@@ -77,8 +79,8 @@ test('start gates, secret privacy and snapshot cloning resist client manipulatio
   game.handle(ids[0], 'start', {});
   assert.equal(game.currentPhase, 'playing');
   const snapshot = game.snapshot();
-  assert.equal(JSON.stringify(snapshot).includes('allegiance'), false);
-  assert.equal(JSON.stringify(snapshot).includes('teammates'), false);
+  assert.equal(JSON.stringify(snapshot).includes('"allegiance":'), false);
+  assert.equal(JSON.stringify(snapshot).includes('"teammates":'), false);
   snapshot.players[0].x = 100;
   assert.notEqual(game.snapshot().players[0].x, 100);
   assert.equal(events.filter(e => e.type === 'secret').length, 3);
@@ -139,7 +141,7 @@ test('saboteur authorization, cooldown and emergency countdown stay authoritativ
   assert.equal(game.snapshot().winner, 'saboteur');
 });
 
-test('majority detention ends round and host restart removes old allegiances', () => {
+test('majority detention preserves the remaining flight and host restart clears a finished round', () => {
   const { game, ids, advance } = setup();
   game.handle(ids[0], 'start', {});
   const saboteur = ids.find(id => game.getSecret(id).allegiance === 'saboteur')!;
@@ -147,7 +149,13 @@ test('majority detention ends round and host restart removes old allegiances', (
   game.handle(ids[0], 'report', {});
   assert.equal(game.currentPhase, 'meeting');
   for (const id of ids) game.handle(id, 'vote', { targetId: saboteur });
-  assert.equal(game.snapshot().winner, 'crew');
+  assert.equal(game.snapshot().winner, null);
+  assert.equal(game.currentPhase, 'playing', 'detaining the threat cannot skip landing');
+  assert.equal(game.snapshot().players.find(player => player.id === saboteur)!.detained, true);
+  game.handle(ids[0], 'restart', {});
+  assert.equal(game.currentPhase, 'playing', 'the host cannot reset an unfinished journey');
+  advance(game.snapshot().remaining * 1000 + 100);
+  assert.equal(game.currentPhase, 'ended', 'a crew that never finishes its duties eventually loses its flight window');
   game.handle(ids[1], 'restart', {});
   assert.equal(game.currentPhase, 'ended');
   game.handle(ids[0], 'restart', {});
@@ -156,7 +164,7 @@ test('majority detention ends round and host restart removes old allegiances', (
   assert.ok(game.snapshot().players.every(p => !p.detained && !p.ready));
 });
 
-test('disconnect reassigns host and cannot leave a departed saboteur blocking victory', () => {
+test('disconnect reassigns host and a departed saboteur cannot block the remaining flight', () => {
   const { game, ids } = setup();
   game.removePlayer(ids[0]);
   assert.equal(game.snapshot().hostId, ids[1]);
@@ -164,7 +172,10 @@ test('disconnect reassigns host and cannot leave a departed saboteur blocking vi
   game.handle(ids[1], 'start', {});
   const saboteur = game.snapshot().players.find(p => game.getSecret(p.id).allegiance === 'saboteur')!.id;
   game.removePlayer(saboteur);
-  assert.equal(game.snapshot().winner, 'crew');
+  assert.equal(game.snapshot().winner, null);
+  assert.equal(game.currentPhase, 'playing');
+  assert.ok(!game.snapshot().chat.some(message => /active threat has been secured/.test(message.text)), 'public chat must not reveal the departed player’s allegiance');
+  assert.ok(game.snapshot().players.every(player => game.getSecret(player.id).allegiance === 'crew'));
 });
 
 test('comms disruption blocks chat on the server even if a client bypasses its UI', () => {

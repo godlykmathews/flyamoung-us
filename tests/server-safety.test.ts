@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { FlightGame } from '../server/src/systems/game.js';
+import { useCabinFixture } from './helpers/cabin-fixture.js';
 import { SAFETY_INSTRUCTIONS, SAFETY_STEP_DURATION, SAFETY_STEP_DURATIONS, type SafetyChallenge } from '../shared/protocol.js';
 import { SAFETY_DEMO_STATION } from '../shared/world.js';
 
@@ -10,6 +11,7 @@ function createSetup(count = 1) {
   let now = 0;
   const messages: Array<{ id: string; type: string; data: unknown }> = [];
   const game = new FlightGame('1234', count === 1, (id, type, data) => messages.push({ id, type, data }), () => now);
+  useCabinFixture(game);
   const ids = Array.from({ length: count }, (_, i) => `p${i}`);
   for (const id of ids) { game.addPlayer(id, id); game.handle(id, 'ready', { ready: true }); }
   game.handle(ids[0], 'start', {});
@@ -104,7 +106,7 @@ test('meetings pause the demonstration, detention resets it, and a new flight re
   h.game.handle(operator, 'beginSafety', {}); assert.equal(h.game.snapshot().safety.status, 'idle');
 
   const next = h.open(reporter); h.game.handle(reporter, 'submitSafety', { token: next.token, order }); h.step(demoDurationMs);
-  assert.equal(h.game.snapshot().safety.status, 'complete'); h.step(360000);
+  assert.equal(h.game.snapshot().safety.status, 'complete'); h.step(720000);
   assert.equal(h.game.currentPhase, 'ended'); h.game.handle(h.ids[0], 'restart', {});
   assert.equal(h.game.currentPhase, 'lobby'); assert.deepEqual(h.game.snapshot().safety, { status: 'idle', operatorId: null, step: 0, elapsed: 0 });
   assert.equal(h.game.snapshot().story.objectives.find(goal => goal.id === 'safety-demo')!.current, 0);

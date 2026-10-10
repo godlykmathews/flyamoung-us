@@ -50,7 +50,7 @@ export class ExperienceSimulation {
   incapacitate(id: string) {
     const member = this.member(id); if (!member || member.incapacitated) return false;
     member.incapacitated = true; member.activity = 'idle'; member.seatbelt = false; this.cancel(id);
-    const player = this.port.players().find(p => p.id === id); if (player) { player.weaponDrawn = false; player.carriedItem = null; }
+    const player = this.port.players().find(p => p.id === id); if (player) { player.weaponDrawn = false; player.equippedTool = null; player.carriedItem = null; }
     return true;
   }
   private player(id: string) { return this.port.players().find(player => player.id === id); }
@@ -160,7 +160,7 @@ export class ExperienceSimulation {
       case 'repair-pressure': case 'extinguish-smoke': this.state.incident = 'none'; this.state.remaining = 0; this.state.severity = 0; this.state.masksDeployed = false; for (const p of Object.values(this.state.players)) p.oxygenMask = false; this.port.announce(kind === 'repair-pressure' ? 'Cabin pressure restored. The cabin is safe again.' : 'Smoke contained. Cabin visibility is clearing.'); break;
       case 'aid-pilot': this.port.cabin.revive('pilot'); this.state.pilotCondition = 'recovering'; this.state.pilotRecovery = 5; this.port.announce('The pilot is recovering. Thank you for assisting.'); break;
       case 'rescue-player': this.member(targetId)!.incapacitated = false; this.port.announce(`${this.player(targetId)!.name} has been assisted and can move again.`); break;
-      case 'disarm': { const target = this.player(targetId)!; target.weaponDrawn = false; target.detained = true; target.carriedItem = null; this.cancel(targetId); this.port.announce(`${target.name} was disarmed and detained after exposing a weapon. Their allegiance remains private.`); break; }
+      case 'disarm': { const target = this.player(targetId)!; target.weaponDrawn = false; target.equippedTool = null; target.detained = true; target.carriedItem = null; this.cancel(targetId); this.port.announce(`${target.name} was disarmed and detained after exposing a weapon. Their allegiance remains private.`); break; }
       case 'wrong-order': if (this.port.cabin.wrongOrder(targetId)) { player.carriedItem = null; this.state.agitated.push(targetId); this.port.announce('A passenger is upset about their service. Calm them and help them return to their seat.'); } break;
       case 'calm-passenger': this.state.agitated = this.state.agitated.filter(n => n !== targetId); this.port.cabin.guideToSeat(targetId); break;
       case 'poison-pilot': player.carriedItem = null; this.poisonPilot(); break;

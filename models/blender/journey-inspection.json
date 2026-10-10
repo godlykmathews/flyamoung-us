@@ -1,0 +1,524 @@
+[
+  {
+    "source": "client/public/models/journey/airport-terminal.glb",
+    "valid": true,
+    "bytes": 249040,
+    "generator": "Khronos glTF Blender I/O v5.2.40",
+    "nodes": 1,
+    "meshes": 1,
+    "primitives": 5,
+    "meshInstances": 1,
+    "renderedPrimitives": 5,
+    "uniqueTriangles": 7416,
+    "sceneTriangles": 7416,
+    "materials": 5,
+    "materialNames": [
+      "Warm cabin composite",
+      "Blue architectural glazing",
+      "Brushed aluminium",
+      "Porcelain shell",
+      "Airline midnight navy"
+    ],
+    "textures": 0,
+    "images": [],
+    "requiredExtensions": [],
+    "usedExtensions": [],
+    "externalResources": [],
+    "dataUriResources": [],
+    "bounds": {
+      "min": [
+        -14.600000381469727,
+        0,
+        -4.349999904632568
+      ],
+      "max": [
+        14.600000381469727,
+        6.720000267028809,
+        4.375
+      ],
+      "dimensions": [
+        29.200000762939453,
+        6.720000267028809,
+        8.724999904632568
+      ],
+      "units": "meters (glTF convention)"
+    },
+    "errors": [],
+    "warnings": []
+  },
+  {
+    "source": "client/public/models/journey/boarding-scanner.glb",
+    "valid": true,
+    "bytes": 39612,
+    "generator": "Khronos glTF Blender I/O v5.2.40",
+    "nodes": 1,
+    "meshes": 1,
+    "primitives": 4,
+    "meshInstances": 1,
+    "renderedPrimitives": 4,
+    "uniqueTriangles": 1060,
+    "sceneTriangles": 1060,
+    "materials": 4,
+    "materialNames": [
+      "Airline midnight navy",
+      "Warm cabin composite",
+      "Blue architectural glazing",
+      "Cyan illuminated instrument"
+    ],
+    "textures": 0,
+    "images": [],
+    "requiredExtensions": [],
+    "usedExtensions": [
+      "KHR_materials_emissive_strength"
+    ],
+    "externalResources": [],
+    "dataUriResources": [],
+    "bounds": {
+      "min": [
+        -0.2150000035762787,
+        0,
+        -0.19499999284744263
+      ],
+      "max": [
+        0.2150000035762787,
+        1.1965000629425049,
+        0.203000009059906
+      ],
+      "dimensions": [
+        0.4300000071525574,
+        1.1965000629425049,
+        0.39800000190734863
+      ],
+      "units": "meters (glTF convention)"
+    },
+    "errors": [],
+    "warnings": []
+  },
+  {
+    "source": "client/public/models/journey/crew-documents.glb",
+    "valid": true,
+    "bytes": 74808,
+    "generator": "Khronos glTF Blender I/O v5.2.40",
+    "nodes": 1,
+    "meshes": 1,
+    "primitives": 6,
+    "meshInstances": 1,
+    "renderedPrimitives": 6,
+    "uniqueTriangles": 2016,
+    "sceneTriangles": 2016,
+    "materials": 6,
+    "materialNames": [
+      "Airline midnight navy",
+      "Ivory document paper",
+      "Brushed aluminium",
+      "Ocean blue upholstery",
+      "Cyan illuminated instrument",
+      "Warm amber accent"
+    ],
+    "textures": 0,
+    "images": [],
+    "requiredExtensions": [],
+    "usedExtensions": [
+      "KHR_materials_emissive_strength"
+    ],
+    "externalResources": [],
+    "dataUriResources": [],
+    "bounds": {
+      "min": [
+        -0.15000000596046448,
+        0,
+        -0.20000000298023224
+      ],
+      "max": [
+        0.15000000596046448,
+        0.04699999839067459,
+        0.20000000298023224
+      ],
+      "dimensions": [
+        0.30000001192092896,
+        0.04699999839067459,
+        0.4000000059604645
+      ],
+      "units": "meters (glTF convention)"
+    },
+    "errors": [],
+    "warnings": []
+  },
+  {
+    "source": "client/public/models/journey/gate-desk.glb",
+    "valid": true,
+    "bytes": 137148,
+    "generator": "Khronos glTF Blender I/O v5.2.40",
+    "nodes": 1,
+    "meshes": 1,
+    "primitives": 8,
+    "meshInstances": 1,
+    "renderedPrimitives": 8,
+    "uniqueTriangles": 3884,
+    "sceneTriangles": 3884,
+    "materials": 8,
+    "materialNames": [
+      "Graphite rubber",
+      "Warm cabin composite",
+      "Airline midnight navy",
+      "Warm amber accent",
+      "Porcelain shell",
+      "Brushed aluminium",
+      "Blue architectural glazing",
+      "Cyan illuminated instrument"
+    ],
+    "textures": 0,
+    "images": [],
+    "requiredExtensions": [],
+    "usedExtensions": [
+      "KHR_materials_emissive_strength"
+    ],
+    "externalResources": [],
+    "dataUriResources": [],
+    "bounds": {
+      "min": [
+        -1.8600000143051147,
+        0,
+        -0.5
+      ],
+      "max": [
+        1.8600000143051147,
+        2.875000238418579,
+        0.5
+      ],
+      "dimensions": [
+        3.7200000286102295,
+        2.875000238418579,
+        1
+      ],
+      "units": "meters (glTF convention)"
+    },
+    "errors": [],
+    "warnings": []
+  },
+  {
+    "source": "client/public/models/journey/jetbridge.glb",
+    "valid": true,
+    "bytes": 171644,
+    "generator": "Khronos glTF Blender I/O v5.2.40",
+    "nodes": 1,
+    "meshes": 1,
+    "primitives": 6,
+    "meshInstances": 1,
+    "renderedPrimitives": 6,
+    "uniqueTriangles": 4676,
+    "sceneTriangles": 4676,
+    "materials": 6,
+    "materialNames": [
+      "Brushed aluminium",
+      "Ocean blue upholstery",
+      "Warm amber accent",
+      "Warm cabin composite",
+      "Airline midnight navy",
+      "Warm white luminaires"
+    ],
+    "textures": 0,
+    "images": [],
+    "requiredExtensions": [],
+    "usedExtensions": [
+      "KHR_materials_emissive_strength"
+    ],
+    "externalResources": [],
+    "dataUriResources": [],
+    "bounds": {
+      "min": [
+        -1.6749999523162842,
+        -0.12999999523162842,
+        -4.050000190734863
+      ],
+      "max": [
+        1.6749999523162842,
+        2.8899998664855957,
+        4.050000190734863
+      ],
+      "dimensions": [
+        3.3499999046325684,
+        3.019999861717224,
+        8.100000381469727
+      ],
+      "units": "meters (glTF convention)"
+    },
+    "errors": [],
+    "warnings": []
+  },
+  {
+    "source": "client/public/models/journey/knife.glb",
+    "valid": true,
+    "bytes": 23564,
+    "generator": "Khronos glTF Blender I/O v5.2.40",
+    "nodes": 1,
+    "meshes": 1,
+    "primitives": 2,
+    "meshInstances": 1,
+    "renderedPrimitives": 2,
+    "uniqueTriangles": 644,
+    "sceneTriangles": 644,
+    "materials": 2,
+    "materialNames": [
+      "Airline midnight navy",
+      "Brushed aluminium"
+    ],
+    "textures": 0,
+    "images": [],
+    "requiredExtensions": [],
+    "usedExtensions": [],
+    "externalResources": [],
+    "dataUriResources": [],
+    "bounds": {
+      "min": [
+        -0.03550000116229057,
+        0,
+        -0.017000000923871994
+      ],
+      "max": [
+        0.03550000116229057,
+        0.31989526748657227,
+        0.017000000923871994
+      ],
+      "dimensions": [
+        0.07100000232458115,
+        0.31989526748657227,
+        0.03400000184774399
+      ],
+      "units": "meters (glTF convention)"
+    },
+    "errors": [],
+    "warnings": []
+  },
+  {
+    "source": "client/public/models/journey/passport.glb",
+    "valid": true,
+    "bytes": 53452,
+    "generator": "Khronos glTF Blender I/O v5.2.40",
+    "nodes": 1,
+    "meshes": 1,
+    "primitives": 3,
+    "meshInstances": 1,
+    "renderedPrimitives": 3,
+    "uniqueTriangles": 1632,
+    "sceneTriangles": 1632,
+    "materials": 3,
+    "materialNames": [
+      "Airline midnight navy",
+      "Ivory document paper",
+      "Warm amber accent"
+    ],
+    "textures": 0,
+    "images": [],
+    "requiredExtensions": [],
+    "usedExtensions": [],
+    "externalResources": [],
+    "dataUriResources": [],
+    "bounds": {
+      "min": [
+        -0.054999999701976776,
+        0,
+        -0.07750000059604645
+      ],
+      "max": [
+        0.054999999701976776,
+        0.02250000089406967,
+        0.07750000059604645
+      ],
+      "dimensions": [
+        0.10999999940395355,
+        0.02250000089406967,
+        0.1550000011920929
+      ],
+      "units": "meters (glTF convention)"
+    },
+    "errors": [],
+    "warnings": []
+  },
+  {
+    "source": "client/public/models/journey/rope.glb",
+    "valid": true,
+    "bytes": 183340,
+    "generator": "Khronos glTF Blender I/O v5.2.40",
+    "nodes": 1,
+    "meshes": 1,
+    "primitives": 2,
+    "meshInstances": 1,
+    "renderedPrimitives": 2,
+    "uniqueTriangles": 10048,
+    "sceneTriangles": 10048,
+    "materials": 2,
+    "materialNames": [
+      "Natural woven rope",
+      "Twisted fibre accent"
+    ],
+    "textures": 0,
+    "images": [],
+    "requiredExtensions": [],
+    "usedExtensions": [],
+    "externalResources": [],
+    "dataUriResources": [],
+    "bounds": {
+      "min": [
+        -0.1025288999080658,
+        0.008001714944839478,
+        -0.08676131069660187
+      ],
+      "max": [
+        0.12388548254966736,
+        0.02999497950077057,
+        0.09723201394081116
+      ],
+      "dimensions": [
+        0.22641438245773315,
+        0.02199326455593109,
+        0.18399332463741302
+      ],
+      "units": "meters (glTF convention)"
+    },
+    "errors": [],
+    "warnings": []
+  },
+  {
+    "source": "client/public/models/journey/runway-lights.glb",
+    "valid": true,
+    "bytes": 58608,
+    "generator": "Khronos glTF Blender I/O v5.2.40",
+    "nodes": 1,
+    "meshes": 1,
+    "primitives": 4,
+    "meshInstances": 1,
+    "renderedPrimitives": 4,
+    "uniqueTriangles": 1632,
+    "sceneTriangles": 1632,
+    "materials": 4,
+    "materialNames": [
+      "Graphite rubber",
+      "Brushed aluminium",
+      "Warm white luminaires",
+      "Taxiway aggregate"
+    ],
+    "textures": 0,
+    "images": [],
+    "requiredExtensions": [],
+    "usedExtensions": [
+      "KHR_materials_emissive_strength"
+    ],
+    "externalResources": [],
+    "dataUriResources": [],
+    "bounds": {
+      "min": [
+        -9.260000228881836,
+        0,
+        -0.25999999046325684
+      ],
+      "max": [
+        9.260000228881836,
+        0.1744999885559082,
+        0.25999999046325684
+      ],
+      "dimensions": [
+        18.520000457763672,
+        0.1744999885559082,
+        0.5199999809265137
+      ],
+      "units": "meters (glTF convention)"
+    },
+    "errors": [],
+    "warnings": []
+  },
+  {
+    "source": "client/public/models/journey/sabotage-case.glb",
+    "valid": true,
+    "bytes": 36792,
+    "generator": "Khronos glTF Blender I/O v5.2.40",
+    "nodes": 1,
+    "meshes": 1,
+    "primitives": 5,
+    "meshInstances": 1,
+    "renderedPrimitives": 5,
+    "uniqueTriangles": 1016,
+    "sceneTriangles": 1016,
+    "materials": 5,
+    "materialNames": [
+      "Closed burgundy game case",
+      "Graphite rubber",
+      "Airline midnight navy",
+      "Brushed aluminium",
+      "Warm cabin composite"
+    ],
+    "textures": 0,
+    "images": [],
+    "requiredExtensions": [],
+    "usedExtensions": [],
+    "externalResources": [],
+    "dataUriResources": [],
+    "bounds": {
+      "min": [
+        -0.21250000596046448,
+        0.003500014543533325,
+        -0.1120000034570694
+      ],
+      "max": [
+        0.21250000596046448,
+        0.314363956451416,
+        0.14150001108646393
+      ],
+      "dimensions": [
+        0.42500001192092896,
+        0.3108639419078827,
+        0.2535000145435333
+      ],
+      "units": "meters (glTF convention)"
+    },
+    "errors": [],
+    "warnings": []
+  },
+  {
+    "source": "client/public/models/journey/suitcase.glb",
+    "valid": true,
+    "bytes": 71044,
+    "generator": "Khronos glTF Blender I/O v5.2.40",
+    "nodes": 1,
+    "meshes": 1,
+    "primitives": 5,
+    "meshInstances": 1,
+    "renderedPrimitives": 5,
+    "uniqueTriangles": 2000,
+    "sceneTriangles": 2000,
+    "materials": 5,
+    "materialNames": [
+      "Graphite rubber",
+      "Ocean blue upholstery",
+      "Airline midnight navy",
+      "Brushed aluminium",
+      "Warm amber accent"
+    ],
+    "textures": 0,
+    "images": [],
+    "requiredExtensions": [],
+    "usedExtensions": [],
+    "externalResources": [],
+    "dataUriResources": [],
+    "bounds": {
+      "min": [
+        -0.20399999563788698,
+        0.01192765593046702,
+        -0.12250000238418579
+      ],
+      "max": [
+        0.20400005182522682,
+        0.7640001119011874,
+        0.14480000734329224
+      ],
+      "dimensions": [
+        0.4080000474631138,
+        0.7520724559707204,
+        0.267300009727478
+      ],
+      "units": "meters (glTF convention)"
+    },
+    "errors": [],
+    "warnings": []
+  }
+]

@@ -13,6 +13,7 @@
     "preview": "vite preview --host 0.0.0.0",
     "test": "node --import tsx --test tests/*.test.ts",
     "test:integration": "node --import tsx tests/integration.ts",
+    "test:ui": "node scripts/check-journey-ui.mjs",
     "assets:voice": "node scripts/prepare-voice.mjs",
     "predev": "npm run assets:voice",
     "prebuild": "npm run assets:voice"

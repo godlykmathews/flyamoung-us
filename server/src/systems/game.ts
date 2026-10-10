@@ -1,21 +1,22 @@
 import { randomInt, randomUUID } from 'node:crypto';
-import type { Allegiance, ChatMessage, ImpostorObjective, MoveInput, Player, Role, SabotageKind, Secret, ServiceItem, Snapshot, TaskChallenge, HeldAction, WorldActionKind, SafetyChallenge, SafetyDemoState } from '../../../shared/protocol.js';
-import { COLORS, SAFETY_INSTRUCTIONS, SAFETY_STEP_DURATIONS } from '../../../shared/protocol.js';
+import type { Allegiance, ChatMessage, ImpostorObjective, MoveInput, Player, Role, SabotageKind, Secret, ServiceItem, Snapshot, TaskChallenge, HeldAction, WorldActionKind, SafetyChallenge, SafetyDemoState, ImpostorTool } from '../../../shared/protocol.js';
+import { COLORS, SAFETY_INSTRUCTIONS, SAFETY_STEP_DURATIONS, BOARDING_DOCUMENTS, BOARDING_ENTRANCE } from '../../../shared/protocol.js';
 import { canDoTask, canPerformDuty } from '../../../shared/duties.js';
 import { FLIGHT_CONTROL_STATION, INTERACTION_STATIONS, IMPOSTOR_STATION, SERVICE_GALLEY, SAFETY_DEMO_STATION, hasCabinSight, movePlayer, TASKS } from '../../../shared/world.js';
 import { AutopilotController, type FlightController } from './flight.js';
+import { FlightOperations } from './operations.js';
 import { assignRoles } from './roles.js';
 import { CabinSimulation, SERVICE_ITEMS } from './cabin.js';
 import { ExperienceSimulation } from './experience.js';
 import { JourneySimulation } from './story.js';
 
-const ROUND_SECONDS = 360;
+const ROUND_SECONDS = 720;
 const RESERVE_COVERAGE_SECONDS = 20;
 const PUBLIC_ROLES: Role[] = ['Captain', 'Cabin Crew', 'Engineer', 'Air Marshal', 'First Officer', 'Passenger'];
 export const REPAIR_STATIONS: Record<SabotageKind, string> = { blackout: 'electrical', comms: 'radio', navigation: 'navigation' };
 type Payload = Record<string, unknown>;
 type Send = (id: string, type: string, payload: unknown) => void;
-interface PrivatePlayer { allegiance: Allegiance; sabotageReadyAt: number; killReadyAt: number; weaponDrawnAt: number; reported: boolean; objectives: Set<ImpostorObjective['id']>; }
+interface PrivatePlayer { allegiance: Allegiance; sabotageReadyAt: number; killReadyAt: number; weaponDrawnAt: number; reported: boolean; objectives: Set<ImpostorObjective['id']>; bombUsed: boolean; }
 interface Challenge extends TaskChallenge { startedAt: number; sabotage: SabotageKind | null; }
 function record(value: unknown): Payload { return typeof value === 'object' && value !== null && !Array.isArray(value) ? value as Payload : {}; }
 function cleanText(value: unknown, max: number) { return typeof value === 'string' ? value.replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, max) : ''; }
@@ -44,6 +45,11 @@ export class FlightGame {
   private roundStartedAt = 0;
   private lastMeetingAt = -Infinity;
   private cabin = new CabinSimulation();
+  private operations = new FlightOperations();
+  private securityActions = new Map<string, { kind: 'disarmBomb' | 'releaseRestraint'; targetId: string; progress: number; lastAt: number }>();
+  private captainAbsent = 0;
+  private securityAbsent = 0;
+  private hostileSecured = false;
   private story: JourneySimulation;
   private interactions = new Map<string, HeldAction & { lastAt: number }>();
   private standIn = 4;
@@ -54,8 +60,8 @@ export class FlightGame {
 
   constructor(readonly roomId: string, readonly training: boolean, private send: Send, private now: () => number = Date.now, private flight: FlightController = new AutopilotController()) {
     this.story = new JourneySimulation(training);
-    this.experience = new ExperienceSimulation({ training, now, playing: () => this.phase === 'playing', players: () => [...this.players.values()], cabin: this.cabin,
-      canAct: id => !!this.active(id) && !(this.safety.operatorId === id && this.safety.status === 'demonstrating'),
+    this.experience = new ExperienceSimulation({ training, now, playing: () => this.phase === 'playing', players: () => [...this.players.values()].filter(player => this.aboard(player.id)), cabin: this.cabin,
+      canAct: id => this.aboard(id) && !!this.active(id) && !(this.safety.operatorId === id && this.safety.status === 'demonstrating'),
       saboteur: id => this.privatePlayers.get(id)?.allegiance === 'saboteur',
       covertReady: id => (this.privatePlayers.get(id)?.sabotageReadyAt ?? Infinity) <= this.now(),
       useCovert: id => { const secret = this.privatePlayers.get(id)!; secret.sabotageReadyAt = this.now() + 20000; secret.objectives.add('disrupt-system'); this.syncSecrets(); },
@@ -67,7 +73,8 @@ export class FlightGame {
   get size() { return this.players.size; }
   private error(id: string, message: string) { this.send(id, 'error', { message }); }
   private system(text: string) { this.chat.push({ id: ++this.chatId, name: 'FLIGHT 404', text, system: true }); this.chat = this.chat.slice(-30); }
-  private active(id: string) { const player = this.players.get(id); return player && !player.detained && !this.experience?.member(id)?.incapacitated ? player : undefined; }
+  private active(id: string) { const player = this.players.get(id); return player && !player.detained && !this.experience?.member(id)?.incapacitated && this.operations.canMove(id) ? player : undefined; }
+  private aboard(id: string) { return !!this.operations.member(id)?.boarded; }
   private near(id: string, taskId: string) { const player = this.active(id), task = TASKS.find(t => t.id === taskId); return !!player && !!task && Math.hypot(player.x - task.x, player.z - task.z) < 2.25 && hasCabinSight(player, task); }
 
   addPlayer(id: string, name: unknown) {
@@ -78,9 +85,9 @@ export class FlightGame {
     const spawnZ = Array.from({ length: 10 }, (_, slot) => 7.3 - slot * .95).find(z =>
       [...this.players.values()].every(player => Math.hypot(player.x + .35, player.z - z) > .85)
     ) ?? 7.3 - index * .95;
-    this.players.set(id, { id, name: cleanText(name, 18) || `Crew ${index + 1}`, color, x: -0.35, z: spawnZ, yaw: 0, role: 'Passenger', ready: false, detained: false, model: 'passenger-a', weaponDrawn: false, carriedItem: null });
-    this.experience.add(id);
-    this.privatePlayers.set(id, { allegiance: 'crew', sabotageReadyAt: 0, killReadyAt: 0, weaponDrawnAt: -Infinity, reported: false, objectives: new Set() });
+    this.players.set(id, { id, name: cleanText(name, 18) || `Crew ${index + 1}`, color, x: -0.35, z: spawnZ, yaw: 0, role: 'Passenger', ready: false, detained: false, model: 'passenger-a', weaponDrawn: false, equippedTool: null, carriedItem: null });
+    this.experience.add(id); this.operations.add(id);
+    this.privatePlayers.set(id, { allegiance: 'crew', sabotageReadyAt: 0, killReadyAt: 0, weaponDrawnAt: -Infinity, reported: false, objectives: new Set(), bombUsed: false });
     if (!this.hostId) this.hostId = id;
     this.system(`${this.players.get(id)!.name} boarded the flight.`);
   }
@@ -88,7 +95,7 @@ export class FlightGame {
     const player = this.players.get(id);
     if (!player) return;
     if (this.safety.operatorId === id && this.safety.status !== 'complete') this.resetSafety();
-    this.experience.remove(id); this.interactions.delete(id); this.story.stopControl(id); this.players.delete(id); this.privatePlayers.delete(id); this.inputs.delete(id); this.challenges.delete(id); this.lastChat.delete(id); this.lastChallenge.delete(id);
+    this.operations.remove(id); this.securityActions.delete(id); this.experience.remove(id); this.interactions.delete(id); this.story.stopControl(id); this.players.delete(id); this.privatePlayers.delete(id); this.inputs.delete(id); this.challenges.delete(id); this.lastChat.delete(id); this.lastChallenge.delete(id);
     delete this.votes[id];
     for (const [voter, target] of Object.entries(this.votes)) if (target === id) this.votes[voter] = 'skip';
     if (this.hostId === id) this.hostId = this.players.keys().next().value ?? '';
@@ -101,6 +108,7 @@ export class FlightGame {
   getSecret(id: string): Secret {
     const secret = this.privatePlayers.get(id);
     return {
+      inventory: secret?.allegiance === 'saboteur' ? (secret.bombUsed ? ['knife', 'rope'] : ['knife', 'rope', 'bomb']) : [],
       allegiance: secret?.allegiance ?? 'crew',
       teammates: secret?.allegiance === 'saboteur' ? [...this.privatePlayers].filter(([other, p]) => other !== id && p.allegiance === 'saboteur').map(([other]) => other) : [],
       cooldown: Math.max(0, Math.ceil(((secret?.sabotageReadyAt ?? 0) - this.now()) / 1000)),
@@ -119,11 +127,15 @@ export class FlightGame {
       players: [...this.players.values()].map(p => ({ ...p })), tasks: this.tasks.map(t => ({ ...t })),
       integrity: this.integrity, remaining: this.remaining, sabotage: this.sabotage, sabotageRemaining: this.sabotageRemaining,
       meetingRemaining: this.meetingRemaining, votes: { ...this.votes }, winner: this.winner, outcome: this.outcome,
-      flight: this.flight.snapshot(), chat: this.chat.map(m => ({ ...m })), npcs: this.cabin.snapshot(), service: this.cabin.serviceSnapshot(), story: this.story.snapshot(), experience: this.experience.snapshot(), safety: { ...this.safety }, interactions: [...this.interactions.values()].map(({ lastAt: _, ...action }) => ({ ...action })) };
+      operations: this.operations.snapshot(), flight: { ...this.flight.snapshot(), mode: this.operations.stage === 'takeoff' || this.operations.stage === 'landing' ? 'manual' : 'autopilot', altitude: this.operations.snapshot().altitude, airspeed: this.operations.snapshot().airspeed }, chat: this.chat.map(m => ({ ...m })), npcs: this.cabin.snapshot(), service: this.cabin.serviceSnapshot(), story: this.story.snapshot(), experience: this.experience.snapshot(), safety: { ...this.safety }, interactions: [...this.interactions.values()].map(({ lastAt: _, ...action }) => ({ ...action })) };
   }
   handle(id: string, type: string, raw: unknown) {
     if (!this.players.has(id)) return;
     const data = record(raw);
+    const permittedBeforeBoarding = ['sync', 'ready', 'start', 'move', 'chat', 'restart', 'boardingAction', 'vote'];
+    if (this.phase === 'playing' && !this.aboard(id) && !permittedBeforeBoarding.includes(type)) { this.error(id, 'Collect your documents and board at the gate first.'); return; }
+    const flightOnly = ['sync', 'chat', 'aircraftControl', 'restart'];
+    if (this.phase === 'playing' && ['takeoff', 'landing'].includes(this.operations.stage) && !flightOnly.includes(type)) { if (type !== 'move') this.error(id, 'Remain seated during takeoff and landing.'); return; }
     // The shared demonstration is a timed performance, not a client completion
     // flag. Keep the presenter free of conflicting actions until it finishes.
     if (this.safety.status === 'demonstrating' && this.safety.operatorId === id && !['sync', 'chat', 'report', 'vote', 'restart'].includes(type)) {
@@ -131,6 +143,14 @@ export class FlightGame {
       return;
     }
     switch (type) {
+      case 'boardingAction': this.boardingAction(id, data.kind); break;
+      case 'startTakeoff': this.startTakeoff(id); break;
+      case 'startLanding': this.startLanding(id); break;
+      case 'aircraftControl': this.aircraftControl(id, data); break;
+      case 'equipTool': this.equipTool(id, data.tool); break;
+      case 'useTool': this.useTool(id, data.targetId); break;
+      case 'oxygenCut': this.oxygenCut(id); break;
+      case 'disarmBomb': case 'releaseRestraint': this.securityAction(id, type, data); break;
       case 'sync': this.sync(id); break;
       case 'ready': if (this.phase === 'lobby') { const player = this.players.get(id)!; player.ready = typeof data.ready === 'boolean' ? data.ready : !player.ready; } break;
       case 'start': this.start(id); break;
@@ -169,19 +189,105 @@ export class FlightGame {
     if (this.players.size < (this.training ? 1 : 3)) return this.error(id, 'At least 3 players are needed. Use training to explore solo.');
     if ([...this.players.values()].some(p => !p.ready)) return this.error(id, 'Every player must be ready before departure.');
     this.experience.reset([...this.players.keys()]);
+    this.operations.reset([...this.players.keys()]); this.securityActions.clear(); this.captainAbsent = 0; this.securityAbsent = 0; this.hostileSecured = false;
     this.phase = 'playing'; this.roundStartedAt = this.now(); this.lastMeetingAt = this.now(); this.flight.reset(); this.cabin.reset(); this.resetSafety(); this.interactions.clear(); this.unavailableRoleSeconds.clear(); this.standIn = 4;
     for (const [playerId, assignment] of assignRoles([...this.players.keys()], this.training)) {
       this.players.get(playerId)!.role = assignment.role;
-      this.players.get(playerId)!.model = assignment.role === 'Cabin Crew' ? 'attendant-player' : assignment.role === 'Captain' || assignment.role === 'First Officer' ? 'pilot' : assignment.role === 'Air Marshal' ? 'marshal' : assignment.role === 'Engineer' ? 'engineer' : 'passenger-a';
+      this.players.get(playerId)!.model = 'passenger-a';
+      Object.assign(this.players.get(playerId)!, { x: ([...this.players.keys()].indexOf(playerId) % 5 - 2) * 1.2, z: 11 + Math.floor([...this.players.keys()].indexOf(playerId) / 5) * 1.1, yaw: 0, equippedTool: null });
       this.players.get(playerId)!.weaponDrawn = false;
       this.players.get(playerId)!.carriedItem = null;
-      this.privatePlayers.set(playerId, { allegiance: assignment.allegiance, sabotageReadyAt: this.now() + 15000, killReadyAt: this.now() + 10000, weaponDrawnAt: -Infinity, reported: false, objectives: new Set() });
+      this.privatePlayers.set(playerId, { allegiance: assignment.allegiance, sabotageReadyAt: this.now() + 15000, killReadyAt: this.now() + 10000, weaponDrawnAt: -Infinity, reported: false, objectives: new Set(), bombUsed: false });
     }
     this.story.reset([...this.players.values()].map(player => player.role));
-    this.system(this.training ? 'Training started. Complete each chapter of the journey. You can perform every crew duty.' : 'Flight departed. Follow your assigned role duties. Exactly one player is a hidden Terrorist; discuss suspicious behavior and vote as a crew.');
+    this.system(this.training ? 'Training started. Complete each chapter of the journey. You can perform every crew duty.' : 'Boarding is open. Collect your documents, scan at the gate, then complete departure duties. Exactly one player has a hidden Terrorist allegiance.');
     this.system(this.story.snapshot().instruction);
     this.syncSecrets();
   }
+  private boardingAction(id: string, kind: unknown) {
+    const player = this.active(id);
+    if (this.phase !== 'playing' || this.operations.stage !== 'boarding' || !player || this.aboard(id)) return this.error(id, 'Boarding is not available now.');
+    const station = kind === 'documents' ? BOARDING_DOCUMENTS : kind === 'board' ? BOARDING_ENTRANCE : null;
+    if (!station || Math.hypot(player.x - station.x, player.z - station.z) >= station.radius) return this.error(id, 'Walk to the document desk or boarding scanner first.');
+    if (kind === 'documents') { this.operations.documents(id); return; }
+    if (!this.operations.board(id)) return this.error(id, 'Collect your documents at the desk before boarding.');
+    const index = [...this.players.keys()].indexOf(id);
+    Object.assign(player, { x: -.35, z: 7.3 - index * .95, yaw: 0 }); this.inputs.delete(id);
+    this.system(`${player.name} boarded with their ${player.role === 'Passenger' ? 'boarding pass' : 'crew documents'}.`);
+  }
+  private startTakeoff(id: string) {
+    if (this.operations.stage !== 'boarding' || !this.atFlightControls(id) || !this.aboard(id)) return this.error(id, 'The Captain starts takeoff at the flight deck controls.');
+    if (!this.operations.allBoarded([...this.players.values()])) return this.error(id, 'Wait for every active player to board.');
+    if (!this.story.ready || !this.cabin.allSeated() || this.experience.unresolved || this.sabotage || this.operations.snapshot().bomb) return this.error(id, 'Complete departure checks and resolve cabin alerts before takeoff.');
+    this.operations.startTakeoff(id); this.inputs.clear(); this.experience.cancel(); this.interactions.clear(); this.challenges.clear(); this.securityActions.clear();
+    this.system('Takeoff clearance. Release brakes, advance throttle, then rotate above 135 knots. Retract gear after liftoff and climb to 600 feet.');
+  }
+  private startLanding(id: string) {
+    if (!this.atFlightControls(id) || !this.aboard(id) || this.experience.unresolved || this.sabotage || this.operations.snapshot().bomb || !this.operations.startLanding(id)) return this.error(id, 'The Captain begins landing after arrival checks and cabin alerts are clear.');
+    this.inputs.clear(); this.experience.cancel(); this.interactions.clear(); this.challenges.clear(); this.securityActions.clear();
+    this.system('Landing clearance. Lower gear, hold 110–150 knots and keep the aircraft level. After touchdown set idle throttle and hold brakes.');
+  }
+  private aircraftControl(id: string, data: Payload) {
+    if (data.release === true) { this.operations.releaseControl(id); return; }
+    if (!this.atFlightControls(id) || !this.aboard(id) || !this.operations.control(id, this.now(), data)) return this.error(id, 'Only the active Captain at the controls can fly takeoff and landing.');
+  }
+  private equipTool(id: string, tool: unknown) {
+    const player = this.active(id), secret = this.privatePlayers.get(id);
+    if (this.phase !== 'playing' || !player || !this.aboard(id) || secret?.allegiance !== 'saboteur') return this.error(id, 'Only the active hidden Terrorist has this private inventory.');
+    if (tool !== null && tool !== 'knife' && tool !== 'rope' && tool !== 'bomb') return this.error(id, 'Choose an inventory item.');
+    if (tool === 'bomb' && secret.bombUsed) return this.error(id, 'Your single device has already been used.');
+    if (player.equippedTool === tool) return;
+    if (player.equippedTool && this.now() - secret.weaponDrawnAt < 600) return this.error(id, 'Finish drawing before changing or concealing your tool.');
+    player.equippedTool = tool as ImpostorTool | null; player.weaponDrawn = tool !== null;
+    if (tool) { secret.weaponDrawnAt = this.now(); this.experience.cancel(id); this.interactions.delete(id); this.securityActions.delete(id); this.story.stopControl(id); player.carriedItem = null; if (this.safety.operatorId === id && this.safety.status === 'arranging') this.resetSafety(); }
+  }
+  private useTool(id: string, targetId: unknown) {
+    const player = this.active(id), secret = this.privatePlayers.get(id);
+    if (this.phase !== 'playing' || !player || !this.aboard(id) || secret?.allegiance !== 'saboteur' || !player.equippedTool || !player.weaponDrawn) return this.error(id, 'Equip a tool from your private inventory first.');
+    if (this.now() - secret.weaponDrawnAt < 600) return this.error(id, 'Finish drawing the tool before using it.');
+    if (player.equippedTool === 'knife') { if (typeof targetId === 'string' && this.players.has(targetId)) this.attackPlayer(id, targetId); else this.killNpc(id, targetId); return; }
+    if (player.equippedTool === 'bomb') {
+      if (secret.bombUsed || this.operations.snapshot().bomb || secret.sabotageReadyAt > this.now()) return this.error(id, 'The device is unavailable or sabotage is recharging.');
+      if (player.z < -9 || player.z > 9) return this.error(id, 'Place the device inside the passenger cabin.');
+      if (!this.operations.plantBomb(player.x, player.z)) return;
+      secret.bombUsed = true; secret.sabotageReadyAt = this.now() + 25000; secret.objectives.add('disrupt-system'); player.equippedTool = null; player.weaponDrawn = false;
+      this.system('DEVICE ALERT. A device was spotted in the cabin. The Engineer or Air Marshal must hold to disarm it within 60 seconds.'); this.syncSecrets(); return;
+    }
+    const target = typeof targetId === 'string' ? this.active(targetId) : undefined;
+    if (!target || target.id === id || !this.aboard(target.id) || Math.hypot(player.x - target.x, player.z - target.z) >= 1.8 || !hasCabinSight(player, target)) return this.error(id, 'Move close to an active player with a clear view.');
+    if (secret.killReadyAt > this.now()) return this.error(id, 'Your restraint ability is recharging.');
+    this.operations.restrain(target.id); this.inputs.delete(target.id); this.interactions.delete(target.id); this.challenges.delete(target.id); this.experience.cancel(target.id); this.story.stopControl(target.id);
+    target.weaponDrawn = false; target.equippedTool = null; target.carriedItem = null; secret.killReadyAt = this.now() + 25000;
+    this.system(`${target.name} is restrained. Cabin Crew or an Air Marshal can free them, or they can wait 20 seconds.`); this.syncSecrets();
+  }
+  private oxygenCut(id: string) {
+    const player = this.active(id), secret = this.privatePlayers.get(id);
+    if (this.phase !== 'playing' || !player || !this.aboard(id) || secret?.allegiance !== 'saboteur' || secret.sabotageReadyAt > this.now()) return this.error(id, 'Oxygen sabotage is unavailable or recharging.');
+    if (!this.experience.trigger('decompression')) return this.error(id, 'Resolve the current cabin incident before starting another.');
+    secret.sabotageReadyAt = this.now() + 25000; secret.objectives.add('disrupt-system'); this.syncSecrets();
+  }
+  private validSecurityAction(id: string, kind: 'disarmBomb' | 'releaseRestraint', targetId: string) {
+    const player = this.active(id); if (this.phase !== 'playing' || !player || !this.aboard(id) || player.weaponDrawn) return false;
+    if (kind === 'disarmBomb') { const bomb = this.operations.snapshot().bomb; return !!bomb && (this.training || player.role === 'Engineer' || player.role === 'Air Marshal') && Math.hypot(player.x - bomb.x, player.z - bomb.z) < 2 && hasCabinSight(player, bomb); }
+    const target = this.players.get(targetId); return !!target && targetId !== id && this.aboard(targetId) && !!this.operations.snapshot().restraints[targetId] && (this.training || player.role === 'Cabin Crew' || player.role === 'Air Marshal') && Math.hypot(player.x - target.x, player.z - target.z) < 2 && hasCabinSight(player, target);
+  }
+  private securityAction(id: string, kind: 'disarmBomb' | 'releaseRestraint', data: Payload) {
+    if (data.phase === 'cancel') { this.securityActions.delete(id); return; }
+    if (data.phase === 'maintain') { const action = this.securityActions.get(id); if (action?.kind === kind) action.lastAt = this.now(); return; }
+    const targetId = typeof data.targetId === 'string' ? data.targetId : '';
+    if (data.phase !== 'begin' || !this.validSecurityAction(id, kind, targetId)) return this.error(id, 'Move closer and use the security action assigned to your role.');
+    this.experience.cancel(id); this.interactions.delete(id); this.challenges.delete(id); this.story.stopControl(id);
+    if (!this.securityActions.has(id)) this.securityActions.set(id, { kind, targetId, progress: 0, lastAt: this.now() });
+  }
+  private stepSecurityActions(dt: number) {
+    let bombWorked = false;
+    for (const [id, action] of this.securityActions) {
+      if (this.now() - action.lastAt > 500 || !this.validSecurityAction(id, action.kind, action.targetId)) { this.securityActions.delete(id); continue; }
+      if (action.kind === 'disarmBomb') { if (bombWorked) continue; bombWorked = true; if (this.operations.disarm(dt / 6)) { this.system('The device has been disarmed. The cabin is secure.'); this.securityActions.delete(id); } }
+      else { action.progress += dt; if (action.progress + 1e-6 >= 3) { this.operations.releaseRestraint(action.targetId); this.securityActions.delete(id); this.system('The restrained passenger has been freed.'); } }
+    }
+  }
+  private crash(reason: string) { this.operations.crash(reason); this.end('saboteur', reason); }
   private move(id: string, data: Payload) {
     if ((this.phase !== 'playing' && this.phase !== 'lobby') || !this.active(id)) return;
     if (typeof data.dx !== 'number' || typeof data.dz !== 'number' || typeof data.yaw !== 'number' || !Number.isFinite(data.dx) || !Number.isFinite(data.dz) || !Number.isFinite(data.yaw)) return;
@@ -320,7 +426,7 @@ export class FlightGame {
   private killNpc(id: string, npcId: unknown) {
     const player = this.active(id), secret = this.privatePlayers.get(id)!;
     if (this.phase !== 'playing' || !player || secret.allegiance !== 'saboteur') return this.error(id, 'Only the active Terrorist can eliminate an occupant.');
-    if (!player.weaponDrawn) return this.error(id, 'Draw your weapon before attempting an elimination. Nearby crew can see it.');
+    if (!player.weaponDrawn || player.equippedTool !== 'knife') return this.error(id, 'Draw your knife before attempting an elimination. Nearby crew can see it.');
     if (this.now() - secret.weaponDrawnAt < 600) return this.error(id, 'Raise the weapon fully before using it.');
     if (typeof npcId !== 'string') return this.error(id, 'Choose a living cabin occupant.');
     const npc = this.cabin.get(npcId);
@@ -329,19 +435,21 @@ export class FlightGame {
     if (Math.hypot(player.x - npc.x, player.z - npc.z) >= 1.8 || !hasCabinSight(player, npc)) return this.error(id, 'Move closer to the occupant with a clear view.');
     if (!this.cabin.kill(npcId)) return this.error(id, 'This occupant is no longer available.');
     secret.killReadyAt = this.now() + 25000; secret.objectives.add('eliminate-npc');
-    this.integrity = Math.max(0, this.integrity - (npc.kind === 'pilot' ? 16 : 10));
-    this.system(npc.kind === 'pilot' ? 'The pilot is unresponsive. Autopilot remains engaged. Report the incident to the crew.' : 'A cabin occupant is unresponsive. Report the incident to the crew.');
+    if (npc.kind === 'pilot') { this.crash('The pilot was attacked. FLIGHT 404 went down over the ocean.'); this.syncSecrets(); return; }
+    this.integrity = Math.max(0, this.integrity - 10);
+    this.system('A cabin occupant is unresponsive. Report the incident to the crew.');
     this.syncSecrets();
     if (!this.integrity) this.end('saboteur', 'The flight could no longer remain secure. The Terrorist won.');
   }
   private attackPlayer(id: string, targetId: unknown) {
     const player = this.active(id), secret = this.privatePlayers.get(id)!;
     const target = typeof targetId === 'string' ? this.active(targetId) : undefined;
-    if (this.phase !== 'playing' || !player || secret.allegiance !== 'saboteur' || !target || target.id === id) return this.error(id, 'Choose an active nearby crew member.');
-    if (!player.weaponDrawn || this.now() - secret.weaponDrawnAt < 600) return this.error(id, 'Expose your weapon before acting. Nearby crew can intervene.');
+    if (this.phase !== 'playing' || !player || secret.allegiance !== 'saboteur' || !target || !this.aboard(target.id) || target.id === id) return this.error(id, 'Choose an active nearby crew member.');
+    if (!player.weaponDrawn || player.equippedTool !== 'knife' || this.now() - secret.weaponDrawnAt < 600) return this.error(id, 'Expose your weapon before acting. Nearby crew can intervene.');
     if (secret.killReadyAt > this.now()) return this.error(id, 'Your attack is recharging.');
     if (Math.hypot(player.x - target.x, player.z - target.z) >= 1.8 || !hasCabinSight(player, target)) return this.error(id, 'Move close with a clear view of the target.');
     if (!this.experience.incapacitate(target.id)) return;
+    if (target.role === 'Captain') { secret.killReadyAt = this.now() + 25000; this.crash('The Captain was attacked. FLIGHT 404 went down over the ocean.'); this.syncSecrets(); return; }
     this.inputs.delete(target.id); this.interactions.delete(target.id); this.challenges.delete(target.id); this.story.stopControl(target.id);
     if (this.safety.operatorId === target.id && this.safety.status !== 'complete') this.resetSafety();
     secret.killReadyAt = this.now() + 25000; secret.objectives.add('eliminate-npc');
@@ -357,16 +465,7 @@ export class FlightGame {
     this.syncSecrets();
     if (!this.integrity) this.end('saboteur', 'The flight could no longer remain secure. The Terrorist won.');
   }
-  private drawWeapon(id: string, drawn: unknown) {
-    const player = this.active(id);
-    if (this.phase !== 'playing' || !player || this.privatePlayers.get(id)?.allegiance !== 'saboteur') return this.error(id, 'Only the active Terrorist has a concealed weapon.');
-    if (typeof drawn !== 'boolean' || player.weaponDrawn === drawn) return;
-    const secret = this.privatePlayers.get(id)!;
-    if (!drawn && this.now() - secret.weaponDrawnAt < 600) return this.error(id, 'The weapon must remain visible while drawing.');
-    if (drawn) secret.weaponDrawnAt = this.now();
-    player.weaponDrawn = drawn;
-    if (drawn) { this.experience.cancel(id); this.interactions.delete(id); this.story.stopControl(id); player.carriedItem = null; if (this.safety.operatorId === id && this.safety.status === 'arranging') this.resetSafety(); }
-  }
+  private drawWeapon(id: string, drawn: unknown) { if (typeof drawn === 'boolean') this.equipTool(id, drawn ? 'knife' : null); }
   private actionTarget(kind: WorldActionKind, targetId: string) {
     if (kind === 'guide-passenger') {
       const npc = this.cabin.get(targetId);
@@ -420,8 +519,8 @@ export class FlightGame {
     const secret = this.privatePlayers.get(id)!;
     if (secret.reported) return this.error(id, 'You already called your meeting for this flight.');
     if (this.now() - Math.max(this.roundStartedAt, this.lastMeetingAt) < 20000) return this.error(id, 'Meetings are on cooldown for 20 seconds.');
-    this.experience.cancel(); secret.reported = true; this.phase = 'meeting'; this.meetingRemaining = 30; this.votes = {}; this.inputs.clear(); this.challenges.clear(); this.interactions.clear(); this.story.stopControl();
-    for (const player of this.players.values()) player.weaponDrawn = false;
+    this.securityActions.clear(); this.experience.cancel(); secret.reported = true; this.phase = 'meeting'; this.meetingRemaining = 30; this.votes = {}; this.inputs.clear(); this.challenges.clear(); this.interactions.clear(); this.story.stopControl();
+    for (const player of this.players.values()) { player.weaponDrawn = false; player.equippedTool = null; }
     this.system(`${this.players.get(id)!.name} called a crew meeting. Vote to detain a suspect or skip.`);
   }
   private vote(id: string, target: unknown) {
@@ -438,14 +537,14 @@ export class FlightGame {
     const counts = new Map<string, number>();
     for (const [voter, target] of Object.entries(this.votes)) if (this.active(voter) && target !== 'skip' && this.active(target)) counts.set(target, (counts.get(target) ?? 0) + 1);
     const majority = [...counts.entries()].find(([, count]) => count > active.length / 2);
-    if (majority) { this.players.get(majority[0])!.detained = true; this.players.get(majority[0])!.weaponDrawn = false; if (this.safety.operatorId === majority[0] && this.safety.status !== 'complete') this.resetSafety(); this.system(`${this.players.get(majority[0])!.name} was detained by the crew. Their allegiance remains private.`); }
+    if (majority) { this.players.get(majority[0])!.detained = true; this.players.get(majority[0])!.weaponDrawn = false; this.players.get(majority[0])!.equippedTool = null; if (this.safety.operatorId === majority[0] && this.safety.status !== 'complete') this.resetSafety(); this.system(`${this.players.get(majority[0])!.name} was detained by the crew. Their allegiance remains private.`); }
     else this.system('No majority. Nobody was detained.');
     this.phase = 'playing'; this.meetingRemaining = 0; this.votes = {}; this.lastMeetingAt = this.now(); this.inputs.clear(); this.checkSurvivors();
   }
   private checkSurvivors() {
     if (this.training || (this.phase !== 'playing' && this.phase !== 'meeting') || this.players.size === 0) return;
     const active = [...this.privatePlayers.entries()].filter(([id]) => !this.players.get(id)?.detained);
-    if (!active.some(([, p]) => p.allegiance === 'saboteur') && !this.experience.unresolved && !this.sabotage && (!this.story.snapshot().turbulence.active || this.story.snapshot().turbulence.stability >= this.story.snapshot().turbulence.required)) this.end('crew', 'The Terrorist is no longer active. The crew secured FLIGHT 404.');
+    if (!active.some(([, p]) => p.allegiance === 'saboteur') && !this.hostileSecured) { this.hostileSecured = true; }
     else if (!active.some(([, p]) => p.allegiance === 'crew')) this.end('saboteur', 'No active crew remain to secure the flight.');
   }
   private addChat(id: string, text: unknown) {
@@ -463,11 +562,15 @@ export class FlightGame {
     this.phase = 'lobby'; this.integrity = 100; this.remaining = ROUND_SECONDS; this.sabotage = null; this.sabotageRemaining = 0; this.meetingRemaining = 0; this.votes = {}; this.winner = null; this.outcome = '';
     this.tasks = TASKS.map(t => ({ id: t.id, completed: false, completedBy: '' })); this.inputs.clear(); this.challenges.clear(); this.lastChallenge.clear(); this.flight.reset(); this.cabin.reset(); this.story.reset(); this.resetSafety(); this.interactions.clear(); this.unavailableRoleSeconds.clear(); this.standIn = 4;
     let index = 0;
-    for (const [playerId, player] of this.players) { player.ready = false; player.detained = false; player.role = 'Passenger'; player.model = 'passenger-a'; player.weaponDrawn = false; player.carriedItem = null; player.x = -0.35; player.z = 7.3 - index * .95; player.yaw = 0; index++; this.privatePlayers.set(playerId, { allegiance: 'crew', sabotageReadyAt: 0, killReadyAt: 0, weaponDrawnAt: -Infinity, reported: false, objectives: new Set() }); }
+    for (const [playerId, player] of this.players) { player.ready = false; player.detained = false; player.role = 'Passenger'; player.model = 'passenger-a'; player.weaponDrawn = false; player.equippedTool = null; player.carriedItem = null; player.x = -0.35; player.z = 7.3 - index * .95; player.yaw = 0; index++; this.privatePlayers.set(playerId, { allegiance: 'crew', sabotageReadyAt: 0, killReadyAt: 0, weaponDrawnAt: -Infinity, reported: false, objectives: new Set(), bombUsed: false }); }
+    this.operations.reset([...this.players.keys()]); this.securityActions.clear(); this.captainAbsent = 0; this.securityAbsent = 0; this.hostileSecured = false;
     this.system('A new flight is boarding. Ready up when prepared.'); this.syncSecrets();
   }
   private stepReserveCoverage(dt: number) {
     if (this.training) return;
+    const securityAvailable = [...this.players.values()].some(player => (player.role === 'Engineer' || player.role === 'Air Marshal') && !!this.active(player.id) && this.aboard(player.id));
+    this.securityAbsent = this.operations.snapshot().bomb && !securityAvailable ? this.securityAbsent + dt : 0;
+    if (this.securityAbsent + 1e-6 >= RESERVE_COVERAGE_SECONDS) { this.operations.disarm(1); this.securityAbsent = 0; this.system('NPC reserve security disarmed the cabin device after the specialist roles became unavailable.'); }
     for (const role of PUBLIC_ROLES) {
       // Only public availability matters. An idle or secretly hostile player still
       // owns their duties; reserve crew must not identify the hidden allegiance.
@@ -521,20 +624,37 @@ export class FlightGame {
     }
   }
   step(seconds: number) {
+    if (!Number.isFinite(seconds)) return;
     const dt = Math.min(0.1, Math.max(0, seconds));
+    if (this.phase === 'ended') { if (this.operations.stage === 'crashed') this.operations.step(dt, this.now(), () => false); return; }
     if (this.phase === 'lobby' || this.phase === 'playing') for (const [id, input] of this.inputs) {
       const player = this.active(id);
       if (!player || this.now() - input.at > 250 || (this.safety.status === 'demonstrating' && this.safety.operatorId === id)) { this.inputs.delete(id); continue; }
-      Object.assign(player, movePlayer(player.x, player.z, input.dx, input.dz, dt), { yaw: input.yaw });
+      if (this.phase === 'playing' && !this.aboard(id)) Object.assign(player, { x: Math.max(-5, Math.min(5, player.x + input.dx * dt * 3.1)), z: Math.max(4, Math.min(14, player.z + input.dz * dt * 3.1)), yaw: input.yaw });
+      else if (!['takeoff', 'landing'].includes(this.operations.stage)) Object.assign(player, movePlayer(player.x, player.z, input.dx, input.dz, dt), { yaw: input.yaw });
     }
     if (this.phase === 'meeting') { this.meetingRemaining = Math.max(0, this.meetingRemaining - dt); if (!this.meetingRemaining) this.resolveMeeting(); return; }
     if (this.phase !== 'playing') return;
-    this.remaining = Math.max(0, this.remaining - dt); this.flight.step(dt, ROUND_SECONDS);
+    this.remaining = Math.max(0, this.remaining - dt);
+    const captainAvailable = [...this.players.values()].some(p => p.role === 'Captain' && !!this.active(p.id) && this.aboard(p.id));
+    this.captainAbsent = captainAvailable ? 0 : this.captainAbsent + dt;
+    const reservePilot = !this.training && this.captainAbsent >= RESERVE_COVERAGE_SECONDS;
+    const previousStage = this.operations.stage;
+    if (reservePilot && previousStage === 'boarding' && this.operations.allBoarded([...this.players.values()]) && this.story.ready && this.cabin.allSeated() && !this.experience.unresolved && !this.sabotage && !this.operations.snapshot().bomb) this.operations.startTakeoff('npc-reserve-pilot');
+    if (reservePilot && previousStage === 'cruise' && this.operations.snapshot().landingReady && !this.experience.unresolved && !this.sabotage && !this.operations.snapshot().bomb) this.operations.startLanding('npc-reserve-pilot');
+    this.operations.step(dt, this.now(), id => this.atFlightControls(id), reservePilot);
+    if (this.operations.stage === 'crashed') { this.crash(this.operations.snapshot().crashReason); return; }
+    if (this.operations.stage === 'arrived') { this.end('crew', 'FLIGHT 404 has landed safely. The crew completed the journey.'); return; }
+    if (previousStage === 'takeoff' && this.operations.stage === 'cruise') { this.story.advance(); this.standIn = 45; this.interactions.clear(); this.system('Cruise altitude reached. The cabin is open for service.'); this.system(this.story.snapshot().instruction); }
+    if (this.operations.stage === 'takeoff' || this.operations.stage === 'landing') { if (this.remaining <= 0) this.crash('The flight ran out of time over the ocean.'); return; }
+    if (this.operations.stage === 'cruise') this.flight.step(dt, ROUND_SECONDS);
+    this.stepSecurityActions(dt);
     this.integrity = Math.max(0, this.integrity - this.cabin.step(dt, { targets: this.experience.serviceTargets(), claim: (id, requestId, claimedBy) => this.experience.setClaim(id, requestId, claimedBy), deliver: (id, requestId) => this.experience.deliver(id, requestId) }));
     this.stepActions(dt);
     this.stepSafety(dt);
     this.story.step(dt, this.now(), id => this.atFlightControls(id));
-    this.experience.step(dt, this.story.stage === 'turbulence', this.story.snapshot().elapsed);
+    this.experience.step(dt, this.operations.stage === 'cruise' && this.story.stage === 'turbulence', this.story.snapshot().elapsed);
+    for (const player of this.players.values()) if (player.detained || this.experience.member(player.id)?.incapacitated || !player.weaponDrawn && player.equippedTool !== 'bomb') player.equippedTool = null;
     this.stepReserveCoverage(dt);
     this.standIn -= dt;
     if (this.standIn <= 0) {
@@ -543,16 +663,16 @@ export class FlightGame {
       else if (this.story.stage === 'service') this.cabin.requestStanding(1);
       this.standIn = this.story.stage === 'service' ? 45 : 8;
     }
-    if (this.story.ready && this.cabin.allSeated() && !this.experience.unresolved && (!this.story.snapshot().turbulence.active || this.story.snapshot().turbulence.stability >= this.story.snapshot().turbulence.required)) {
+    if (this.operations.stage === 'cruise' && this.story.ready && this.cabin.allSeated() && !this.experience.unresolved && (!this.story.snapshot().turbulence.active || this.story.snapshot().turbulence.stability >= this.story.snapshot().turbulence.required)) {
       const stage = this.story.advance();
       if (stage) { this.system(this.story.snapshot().instruction); this.standIn = stage === 'turbulence' ? .5 : 45; this.interactions.clear(); }
-      else if (this.story.stage === 'approach' && !this.sabotage) this.end('crew', 'The cabin is secure and FLIGHT 404 has arrived safely.');
+      else if (this.story.stage === 'approach' && !this.sabotage) { if (!this.operations.snapshot().landingReady) this.system('Arrival checks complete. The Captain can begin the landing from the flight deck.'); this.operations.readyForLanding(); }
     }
     if (this.phase !== 'playing') return;
     this.checkSurvivors();
     if (this.phase !== 'playing') return;
     if (this.sabotage) { this.sabotageRemaining = Math.max(0, this.sabotageRemaining - dt); this.integrity = Math.max(0, this.integrity - dt * 0.75); if (this.sabotageRemaining <= 0) this.integrity = 0; }
-    if (this.integrity <= 0) this.end('saboteur', 'An unresolved emergency grounded FLIGHT 404. The Terrorist won.');
+    if (this.integrity <= 0) this.crash('An unresolved emergency brought FLIGHT 404 down over the ocean.');
     else if (this.remaining <= 0) this.end('saboteur', 'The flight window expired before the crew completed the journey.');
   }
 }

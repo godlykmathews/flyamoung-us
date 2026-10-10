@@ -42,13 +42,14 @@ export function CrewAvatar({ player, safety }: { player: Player; safety?: Safety
     group.rotation.y += angle * (1 - Math.exp(-14 * delta));
   });
   const personal=session.get().snapshot?.experience.players[player.id];
+  const restrained=!!session.get().snapshot?.operations?.restraints[player.id];
   const working=session.get().snapshot?.experience.actions.some(a=>a.playerId===player.id);
   const fallback = <LoadingCrew color={player.color} />;
   return <group ref={root}>
-    <CharacterBoundary fallback={fallback}><Suspense fallback={fallback}><CharacterModel movement={movement} model={player.model} carrying={!!player.carriedItem} item={player.carriedItem} weapon={player.weaponDrawn} safety={safety} oxygenMask={personal?.oxygenMask} pose={personal?.incapacitated?'dead':personal?.activity==='reading'?'reading':personal?.activity==='resting'?'resting':working?'gesture':session.get().snapshot?.interactions.some(a=>a.playerId===player.id)?'gesture':'idle'} /></Suspense></CharacterBoundary>
+    <CharacterBoundary fallback={fallback}><Suspense fallback={fallback}><CharacterModel movement={movement} model={player.model} carrying={!!player.carriedItem} item={player.carriedItem} weapon={player.weaponDrawn} tool={player.equippedTool??null} safety={safety} oxygenMask={personal?.oxygenMask} pose={personal?.incapacitated?'dead':personal?.activity==='reading'?'reading':personal?.activity==='resting'?'resting':working?'gesture':session.get().snapshot?.interactions.some(a=>a.playerId===player.id)?'gesture':'idle'} /></Suspense></CharacterBoundary>
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.014, 0]}>
-      <ringGeometry args={[0.28, 0.31, 32]} /><meshBasicMaterial color={player.detained ? '#8895a0' : player.color} transparent opacity={0.75} depthWrite={false} />
+      <ringGeometry args={[0.28, 0.31, 32]} /><meshBasicMaterial color={player.detained ? '#8895a0' : restrained ? '#bc8745' : player.color} transparent opacity={0.75} depthWrite={false} />
     </mesh>
-    {safety?.status!=='demonstrating'&&<CrewNameplate name={player.name} role={player.role} color={player.color} detained={player.detained} />}
+    {safety?.status!=='demonstrating'&&<CrewNameplate name={player.name} role={player.role} color={player.color} detained={player.detained} restrained={restrained} />}
   </group>;
 }

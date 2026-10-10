@@ -1,0 +1,158 @@
+{
+  "name": "FLIGHT 404 original journey kit",
+  "version": 1,
+  "author": "Original procedural Blender modeling for FLIGHT 404",
+  "license": "CC0-1.0",
+  "provenance": "Original parametric meshes authored in scripts/blender/build_journey_assets.py; no third-party geometry or images.",
+  "request": "Create attractive airline boarding terminal, jetbridge, documents, baggage, runway architecture and fictional closed sabotage props for browser game.",
+  "negativePrompt": "No photoreal imagery, branding, downloaded meshes, external textures, real weapon internals or functional mechanisms.",
+  "units": "metres",
+  "upAxis": "+Y",
+  "forwardAxis": "+Z",
+  "origin": "Base/floor centre except flat document props and runway-light pair, which use table/runway centre.",
+  "budget": {
+    "maxTotalBytes": 3000000,
+    "textures": 0,
+    "externalResources": 0
+  },
+  "blenderVersion": "5.2.2 LTS",
+  "source": "models/blender/journey-assets.blend",
+  "assets": {
+    "gate-desk": {
+      "path": "/models/journey/gate-desk.glb",
+      "bytes": 137148,
+      "triangles": 3884,
+      "dimensionsMeters": [
+        3.7200000286102295,
+        2.875000238418579,
+        1.0
+      ],
+      "sha256": "0107dbf183e15dd857c5c4b26b4a64e253b97851b8cc2b587b5d56f478a34bfb",
+      "contract": "Gate counter with check-in monitors and elevated sign; front +Z."
+    },
+    "jetbridge": {
+      "path": "/models/journey/jetbridge.glb",
+      "bytes": 171644,
+      "triangles": 4676,
+      "dimensionsMeters": [
+        3.3499999046325684,
+        3.019999861717224,
+        8.100000381469727
+      ],
+      "sha256": "7012f17549338d708bbc0cde7cf165c6a75b0e87015de771cc09fe3959066c85",
+      "contract": "Open-air glazed-frame passage aligned Z; floor top Y=0; entrances \u00b14m Z."
+    },
+    "boarding-scanner": {
+      "path": "/models/journey/boarding-scanner.glb",
+      "bytes": 39612,
+      "triangles": 1060,
+      "dimensionsMeters": [
+        0.4300000071525574,
+        1.1965000629425049,
+        0.39800000190734863
+      ],
+      "sha256": "822393483143503044b994777a4ffd9dfb78f2b65f23a836f4bcebba97e9a30a",
+      "contract": "Pedestal document scanner; scan surface Y=1.19m; front +Z."
+    },
+    "crew-documents": {
+      "path": "/models/journey/crew-documents.glb",
+      "bytes": 74808,
+      "triangles": 2016,
+      "dimensionsMeters": [
+        0.30000001192092896,
+        0.04699999839067459,
+        0.4000000059604645
+      ],
+      "sha256": "defe206d989ac2cf76b18ed376ce64d99f02cdc0f5b26271defe800afb525b4b",
+      "contract": "Dispatch folder and manifest; lie flat in XZ; readable from +Z."
+    },
+    "passport": {
+      "path": "/models/journey/passport.glb",
+      "bytes": 53452,
+      "triangles": 1632,
+      "dimensionsMeters": [
+        0.10999999940395355,
+        0.02250000089406967,
+        0.1550000011920929
+      ],
+      "sha256": "5d388317af3d9b0f8fe82d10de77a5fbc8a5794d767519c74532fc34dd0976ed",
+      "contract": "Small flat navy passport; lie flat in XZ; readable from +Z."
+    },
+    "suitcase": {
+      "path": "/models/journey/suitcase.glb",
+      "bytes": 71044,
+      "triangles": 2000,
+      "dimensionsMeters": [
+        0.40800002217292786,
+        0.7520723473280668,
+        0.267300009727478
+      ],
+      "sha256": "9aa04f14e03c2af828650c8da525cd1b4beebbcd8800f47d0996c26b59f51d6f",
+      "contract": "Carry-on with raised handle and wheels; front +Z."
+    },
+    "airport-terminal": {
+      "path": "/models/journey/airport-terminal.glb",
+      "bytes": 249040,
+      "triangles": 7416,
+      "dimensionsMeters": [
+        29.200000762939453,
+        6.720000267028809,
+        8.724999904632568
+      ],
+      "sha256": "116212036422994eb9ea16496973e0f2bb62eeb3b95cab95a605213bbea256e2",
+      "contract": "Terminal facade faces +Z, 29.2m wide, 6.72m tall."
+    },
+    "runway-lights": {
+      "path": "/models/journey/runway-lights.glb",
+      "bytes": 58608,
+      "triangles": 1632,
+      "dimensionsMeters": [
+        18.520000457763672,
+        0.1744999885559082,
+        0.5199999809265137
+      ],
+      "sha256": "86ae7438fa7b11c1e810ad80e15d90a745daed6e2b849ba30edf3e381c5fa284",
+      "contract": "One pair of edge lamps at X=-9,+9m, runway centre origin."
+    },
+    "sabotage-case": {
+      "path": "/models/journey/sabotage-case.glb",
+      "bytes": 36792,
+      "triangles": 1016,
+      "dimensionsMeters": [
+        0.42500001192092896,
+        0.3108639419078827,
+        0.2535000145435333
+      ],
+      "sha256": "2f6449edd47f736e4e89fba3678daa9b945c68e247374d24d89863808755c871",
+      "contract": "Fictional sealed red game prop. No internals or functional mechanism."
+    },
+    "knife": {
+      "path": "/models/journey/knife.glb",
+      "bytes": 23564,
+      "triangles": 644,
+      "dimensionsMeters": [
+        0.07100000232458115,
+        0.31989526748657227,
+        0.03400000184774399
+      ],
+      "sha256": "4838790a12134bb902665c2bf2e184d60b449cef234bd410253aa6e136fb068b",
+      "contract": "Rounded stylized fictional prop. Grip at bottom, tip +Y."
+    },
+    "rope": {
+      "path": "/models/journey/rope.glb",
+      "bytes": 183340,
+      "triangles": 10048,
+      "dimensionsMeters": [
+        0.22641438245773315,
+        0.02199326455593109,
+        0.18399332463741302
+      ],
+      "sha256": "cea98409482eb04e5a2e0ec0a2064147c7e51bef8e7b4c12fc9b10c5f75ab4d3",
+      "contract": "Decorative coil lies on XZ plane; no rig or mechanical simulation."
+    }
+  },
+  "totalBytes": 1099052,
+  "totalTriangles": 36024,
+  "scriptSha256": "54a1f14b3f82a2d69fe57a53c06d03a4755788bda6a65f65c7f2976f0a0756f0",
+  "sourceSha256": "be672222ab4017e65d89bf27b682a8a3045db86b78eb02c589197d0ce6343ad0"
+}

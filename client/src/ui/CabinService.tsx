@@ -44,7 +44,7 @@ export function CabinActions({ snapshot, secret, me, onService }: {
         <small>{requests.length ? `${requests.length} passenger ${requests.length === 1 ? 'request' : 'requests'}` : 'Passengers are comfortable'}</small></span>
     </button>}
     {secret?.allegiance==='saboteur' && me.weaponDrawn && <div className="weapon-status">Weapon drawn · visible to other crew</div>}
-    {victim && me.weaponDrawn && <button className="npc-eliminate" disabled={!!secret?.killCooldown} onClick={() => session.send('killNpc', { npcId: victim.id })}>
+    {victim && me.weaponDrawn && !snapshot.operations && <button className="npc-eliminate" disabled={!!secret?.killCooldown} onClick={() => session.send('killNpc', { npcId: victim.id })}>
       <Skull size={16} /><span>{secret?.killCooldown ? `Ready in ${Math.ceil(secret.killCooldown)}s` : `Eliminate ${victim.kind === 'passenger' ? `seat ${victim.seat}` : victim.kind}`}</span><kbd>F</kbd>
     </button>}
   </aside>;

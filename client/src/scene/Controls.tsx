@@ -51,7 +51,7 @@ export function Controls({enabled,onNearby,onArea,onLock,turbulence=0,cameraOver
   const condition=snapshot.experience.players[me.id];
   // Moving intentionally releases the game seatbelt on the server. Do not
   // suppress that first movement packet or the player would remain locked.
-  const canMove=enabled&&!me.detained&&!condition?.incapacitated;
+  const canMove=enabled&&!me.detained&&!condition?.incapacitated&&!snapshot.operations?.restraints[me.id];
   let dx=0,dz=0;
   if(enabled&&!me.detained&&!condition?.incapacitated){
    const k=keys.current;input.yaw+=((k.has('ArrowLeft')?1:0)-(k.has('ArrowRight')?1:0))*delta*1.7;

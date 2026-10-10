@@ -2,6 +2,16 @@
 
 The walkable interior, task/service props and current animated airline cast are authored in Blender and exported as local GLBs. Editable sources live in `models/blender/`; `client/src/scene/BlenderInterior.tsx` loads the exported art without changing its metre-scale world coordinates. The exterior presentation uses the project owner's supplied Boeing 737 MAX 8 GLB. Original Three.js geometry remains a loading/error fallback, so asset loading does not remove the walking controls.
 
+## Boarding, flight operations and private tools — 11 October 2026
+
+`scripts/blender/build_journey_assets.py` creates eleven original CC0 models: airport terminal, gate desk, open-window jetbridge, boarding scanner, crew documents, passport, suitcase, runway lights, sealed sabotage case, rounded knife and coiled rope. Runtime GLBs live in `client/public/models/journey/`; editable source, hashes, dimensions and inspection results live in `models/blender/journey-*`. The complete kit is **1,099,052 bytes / 36,024 triangles** with embedded PBR materials and no external textures. See the [journey asset guide](../models/blender/journey-assets.md) for pivots and hand mounts.
+
+The terminal uses the existing animated cast for boarding travelers, seated passengers and the dispatch attendant. All human players now use the same ordinary traveler model independently of public role or private allegiance. Equipped tools follow the existing hand animation; the private inventory is never attached to a concealed character. Tool-specific attack and restraint clips remain future animation work.
+
+The supplied Boeing's verified gear meshes are visible during ground operations and when the pilot lowers the gear. Cruise hides them. `JourneyScene.tsx` presents authoritative takeoff/landing telemetry and a shared sea-crash ending with a procedural ocean and non-graphic impact splash. This replaces the earlier above-cloud descent for the new operations flow; it does not add physical aircraft breakup or hydrodynamics.
+
+Actual Blender Cycles previews: [boarding](previews/journey-boarding.png), [props](previews/journey-props.png), [airport](previews/journey-airport.png). All eleven GLBs passed structural inspection without errors or warnings. These are asset renders and structural checks; the new browser scene was not visually tested because the user chose automated verification after the browser permission block persisted.
+
 ## Incident presentation and passenger activities — 11 October 2026
 
 The current incident pass reuses the existing Blender cabin, sixteen-clip cast, service props and `models/safety/oxygen-mask.glb`; it does not add a new character export or claim new authored animation clips. Remote working actions use `Gesture`, reading reuses `Serve`, resting uses `Idle`, incapacitation uses the existing non-graphic unresponsive pose, and the fixed pilot uses the seated unresponsive pose while awaiting aid. A fitted oxygen mask is mounted at face height on the character. Dedicated treatment, restraint and magazine-holding animation remains future art work.

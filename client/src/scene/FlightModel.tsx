@@ -16,14 +16,14 @@ const EXTENDED_GEAR_MESHES = new Set([
   'Object_60', 'Object_62', 'Object_64', 'Object_66',
 ]);
 
-type FlightModelProps = { onReady?: () => void };
+type FlightModelProps = { onReady?: () => void; gearDown?: boolean };
 
 /** Optional warm-up; the GLB embeds all textures and needs no external decoders. */
 export function preloadFlightModel() {
   useGLTF.preload(FLIGHT_MODEL_URL, false, false);
 }
 
-function ImportedAircraft({ onReady }: FlightModelProps) {
+function ImportedAircraft({ onReady, gearDown = false }: FlightModelProps) {
   const { scene } = useGLTF(FLIGHT_MODEL_URL, false, false);
   const aircraft = useMemo(() => {
     // Clone transforms so the lobby and launch can independently animate one cached asset.
@@ -48,6 +48,12 @@ function ImportedAircraft({ onReady }: FlightModelProps) {
     return normalized;
   }, [scene]);
 
+  useEffect(() => {
+    aircraft.traverse(object => {
+      if (EXTENDED_GEAR_MESHES.has(object.name)) object.visible = gearDown;
+    });
+  }, [aircraft, gearDown]);
+
   useEffect(() => { onReady?.(); }, [onReady]);
   // Materials, textures and geometry belong to useGLTF's shared cache.
   return <primitive object={aircraft} dispose={null} />;
@@ -67,10 +73,10 @@ class ModelErrorBoundary extends Component<{ children: ReactNode; onReady?: () =
 }
 
 /** Centered exterior, 24m long, +Y up and nose -Z. Parent groups own its flight path. */
-export function FlightModel({ onReady }: FlightModelProps) {
+export function FlightModel({ onReady, gearDown = false }: FlightModelProps) {
   return <ModelErrorBoundary onReady={onReady}>
     <Suspense fallback={<ExteriorAircraft />}>
-      <ImportedAircraft onReady={onReady} />
+      <ImportedAircraft onReady={onReady} gearDown={gearDown} />
     </Suspense>
   </ModelErrorBoundary>;
 }

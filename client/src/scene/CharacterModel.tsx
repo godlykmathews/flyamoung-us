@@ -5,6 +5,7 @@ import { AnimationMixer, Group, LoopOnce, MathUtils, Mesh, Skeleton, SkinnedMesh
 import { clone } from 'three/addons/utils/SkeletonUtils.js';
 import type { SafetyDemoState, ServiceItem } from '../../../shared/protocol';
 import { ServiceItemModel } from './ServiceItemModel';
+import { ToolModel, type HeldToolKind } from './HeldTool';
 import { SafetyEquipment, type SafetyEquipmentHandle } from './SafetyEquipment';
 
 const MODEL_NAMES = new Set(['attendant','attendant-player','pilot','marshal','engineer','passenger-a','passenger-b','passenger-c']);
@@ -34,8 +35,8 @@ function Sidearm() {
 }
 
 /** Original Blender humanoids with independent skeletons, shared geometry and action clips. */
-export function AuthoredCharacterModel({ model, movement, carrying=false, item=null, pose='idle', weapon=false, brace=false, seatedDeath=false, safety, oxygenMask=false }: {
-  model:string; movement?:MutableRefObject<number>; carrying?:boolean; item?:ServiceItem|null; pose?:string; weapon?:boolean; brace?:boolean; seatedDeath?:boolean; safety?:SafetyDemoState; oxygenMask?:boolean;
+export function AuthoredCharacterModel({ model, movement, carrying=false, item=null, pose='idle', weapon=false, brace=false, seatedDeath=false, safety, oxygenMask=false, tool=null }: {
+  model:string; movement?:MutableRefObject<number>; carrying?:boolean; item?:ServiceItem|null; pose?:string; weapon?:boolean; brace?:boolean; seatedDeath?:boolean; safety?:SafetyDemoState; oxygenMask?:boolean; tool?:HeldToolKind|null;
 }) {
   const { scene,animations }=useGLTF(`/models/animated/${modelName(model)}.glb`,false,false);
   const initialPose=useRef(pose);
@@ -78,7 +79,7 @@ export function AuthoredCharacterModel({ model, movement, carrying=false, item=n
     else if(pose==='sitting'){active='Sit';motion=0;}
     else if(pose==='seated'){active=brace?'Brace':'Seated';motion=0;}
     else if(transition.current>0){active='Stand';motion=0;}
-    else if(weapon){active='Weapon';motion=0;}
+    else if(weapon||tool){active=tool==='bomb'?'Carry':'Weapon';motion=0;}
     else if(pose==='serving'){active='Serve';motion=0;}
     else if(carrying){active=motion>.08?'Carry':'Serve';motion=0;}
     else if(pose==='reading'){active='Serve';motion=0;}
@@ -110,10 +111,10 @@ export function AuthoredCharacterModel({ model, movement, carrying=false, item=n
     {pose==='reading'&&!item&&<group ref={tray} position={[0,1.04,-.34]} rotation={[-.35,0,0]}><mesh><boxGeometry args={[.34,.012,.23]}/><meshStandardMaterial color='#edf0de'/></mesh><mesh position={[0,.008,0]}><boxGeometry args={[.005,.005,.23]}/><meshStandardMaterial color='#426772'/></mesh></group>}
     {demonstrating&&<Suspense fallback={null}><SafetyEquipment ref={safetyEquipment}/></Suspense>}
     {item&&pose!=='dead'&&!demonstrating&&<group ref={tray} position={[0,1.04,-.34]}><Suspense fallback={null}><ServiceItemModel item={item}/></Suspense></group>}
-    {weapon&&pose!=='dead'&&!demonstrating&&<group ref={arm} position={[.045,1.22,-.49]}><Suspense fallback={null}><Sidearm/></Suspense></group>}
+    {(weapon||tool)&&pose!=='dead'&&!demonstrating&&<group ref={arm} position={[.045,1.22,-.49]}><Suspense fallback={null}>{tool?<ToolModel tool={tool} held/>:<Sidearm/>}</Suspense></group>}
   </group>;
 }
 
-export function CharacterModel({movement,model='passenger-a',carrying=false,item=null,weapon=false,pose='idle',safety,oxygenMask=false}:{movement:MutableRefObject<number>;model?:string;carrying?:boolean;item?:ServiceItem|null;weapon?:boolean;pose?:string;safety?:SafetyDemoState;oxygenMask?:boolean}){
-  return <AuthoredCharacterModel model={model} movement={movement} carrying={carrying} item={item} weapon={weapon} pose={pose} safety={safety} oxygenMask={oxygenMask}/>;
+export function CharacterModel({movement,model='passenger-a',carrying=false,item=null,weapon=false,pose='idle',safety,oxygenMask=false,tool=null}:{movement:MutableRefObject<number>;model?:string;carrying?:boolean;item?:ServiceItem|null;weapon?:boolean;pose?:string;safety?:SafetyDemoState;oxygenMask?:boolean;tool?:HeldToolKind|null}){
+  return <AuthoredCharacterModel model={model} movement={movement} carrying={carrying} item={item} weapon={weapon} pose={pose} safety={safety} oxygenMask={oxygenMask} tool={tool}/>;
 }
