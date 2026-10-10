@@ -130,7 +130,17 @@ docker run --rm -p 2567:2567 -e PORT=2567 flight-404
 
 Deploy this image to a host supporting **long-running Node processes and WebSockets**. Bind public traffic to port 2567, terminate TLS at the hosting platform or reverse proxy, and forward WebSocket upgrades. Browser access over HTTPS requires WSS for the game connection. The container provides a `/health` health check.
 
-Start with **one server instance**. Rooms live in process memory; restarting the process ends active sessions. Four-digit room codes reserve 1000–9999 in this process and are released when rooms close. Horizontal scaling requires shared Colyseus presence/driver configuration, shared atomic room-code reservations and routing that keeps each room on its owning process. Function-only/static hosting cannot run this multiplayer server.
+Start with **one server instance**. Rooms live in process memory; restarting the process ends active sessions. Four-digit room codes reserve 1000–9999 in this process and are released when rooms close. Horizontal scaling requires shared Colyseus presence/driver configuration, shared atomic room-code reservations and routing that keeps each room on its owning process. The current server starts a persistent Node process; it has not been adapted to a functions runtime.
+
+### Vercel frontend
+
+The included [vercel.json](vercel.json) builds and publishes the browser app. In Vercel, leave **Root Directory empty** (the repository root), select **Node.js 22.x**, and use the Vite preset, `npm ci`, `npm run build`, and output directory `dist`. Do not set the root to `client`: the package, shared code and build configuration live at the repository root. See [Vercel's Vite documentation](https://vercel.com/docs/frameworks/frontend/vite).
+
+Run the current Colyseus backend separately using the Node or Docker instructions above. Set **`VITE_SERVER_URL` in Vercel before building** to that backend's public `wss://` URL, then redeploy. Set **`CLIENT_ORIGIN` on the backend** to the exact HTTPS origin of your Vercel frontend. The frontend and backend must run the same current code. A Vite deployment alone does not start `npm start` or host the multiplayer rooms.
+
+Vercel now offers WebSockets in Functions, but connections have a maximum duration and new connections can reach different instances. This prototype's in-memory rooms, room codes and lack of reconnect recovery require additional work before using that architecture. See [Vercel's WebSocket documentation](https://vercel.com/docs/functions/websockets).
+
+For step-by-step settings, connection checks and an outdated-UI checklist, see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 ### Separate frontend and server hosts
 

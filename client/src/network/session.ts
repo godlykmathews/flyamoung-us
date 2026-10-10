@@ -1,4 +1,5 @@
 import { Client, type Room } from '@colyseus/sdk';
+import { checkFlightServer, connectionErrorMessage, resolveServerEndpoint } from './connection';
 import type { Snapshot, Secret, TaskChallenge, SafetyChallenge } from '../../../shared/protocol';
 export interface SessionState { snapshot: Snapshot | null; secret: Secret | null; challenge: TaskChallenge | null; safetyChallenge: SafetyChallenge | null; error: string; connected: boolean; }
 let state: SessionState = { snapshot:null, secret:null, challenge:null, safetyChallenge:null, error:'', connected:false };
@@ -15,7 +16,8 @@ export const session = {
  clearError:()=>publish({error:''}),
  async connect(name:string,mode:'create'|'join'|'training',code='') {
    publish({error:'',secret:null,challenge:null,safetyChallenge:null});
-   const endpoint = import.meta.env.VITE_SERVER_URL || `${location.protocol==='https:'?'wss':'ws'}://${location.hostname}:${location.port === '5173' || location.port === '4173' ? '2567' : location.port || (location.protocol==='https:'?'443':'80')}`;
+   const endpoint = resolveServerEndpoint(import.meta.env.VITE_SERVER_URL, location.href);
+   await checkFlightServer(endpoint);
    const client = new Client(endpoint);
    const joined = mode==='join' ? await client.joinById(code.trim(),{name}) : await client.create('flight',{name,training:mode==='training'});
    joined.reconnection.maxRetries = 0; // This prototype removes disconnected seats immediately.
@@ -24,8 +26,8 @@ export const session = {
    joined.onMessage('secret',(secret:Secret)=>publish({secret}));
    joined.onMessage('challenge',(challenge:TaskChallenge)=>publish({challenge}));
    joined.onMessage('safetyChallenge',(safetyChallenge:SafetyChallenge)=>publish({safetyChallenge,error:''}));
-   joined.onMessage('error',(payload:{message?:string}|string)=>publish({error:typeof payload==='string'?payload:payload.message||'Action unavailable.'}));
-   joined.onError((_code,message)=>publish({error:message||'Connection error.'}));
+   joined.onMessage('error',(payload:unknown)=>publish({error:connectionErrorMessage(payload,'Action unavailable.')}));
+   joined.onError((_code,message)=>publish({error:connectionErrorMessage(message,'Connection error. Please reconnect to the flight.')}));
    joined.onLeave(()=>{if(room===joined){room=null;publish({connected:false,snapshot:null,secret:null,challenge:null,safetyChallenge:null,error:'You left the flight. Create or join another flight to board again.'});}});
    publish({connected:true});
    joined.send('sync');

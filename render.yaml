@@ -1,0 +1,14 @@
+# One in-memory Colyseus process; the frontend is deployed separately on Vercel.
+services:
+  - type: web
+    name: flight-404-server
+    runtime: node
+    plan: free
+    buildCommand: npm ci --include=dev && npx tsc -p tsconfig.server.json
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: CLIENT_ORIGIN
+        value: https://flyamoung-us.vercel.app

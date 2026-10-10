@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { Client, type Room } from '@colyseus/sdk';
+import { checkFlightServer } from '../client/src/network/connection.js';
 import { SAFETY_INSTRUCTIONS, SAFETY_STEP_DURATIONS, type Player, type Secret, type Snapshot, type TaskChallenge, type SafetyChallenge } from '../shared/protocol.js';
 import { canStand, NPC_PASSENGER_SEATS, SERVICE_GALLEY, SAFETY_DEMO_STATION, TASKS, WALK_SPEED } from '../shared/world.js';
 
@@ -102,6 +103,7 @@ function assertPrivateSnapshots(peers: Peer[]) {
 
 async function main() {
   console.log(`Testing FLIGHT 404 against ${endpoint}`);
+  await checkFlightServer(endpoint);
   const scenario = process.env.TEST_SCENARIO;
   if (scenario && !['multiplayer', 'training', 'concurrency', 'experience'].includes(scenario)) throw new Error('Unknown TEST_SCENARIO');
   if (!scenario || scenario === 'multiplayer') await multiplayerScenario();
