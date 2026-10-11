@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useMemo, useRef } from 'react';
+import { memo, Suspense, useEffect, useLayoutEffect, useMemo, useRef, type RefObject } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import { CanvasTexture, Group, MathUtils, Mesh, SRGBColorSpace, Vector3 } from 'three';
@@ -8,6 +8,7 @@ import { session } from '../network/session';
 import { FlightModel } from './FlightModel';
 import { AuthoredCharacterModel } from './CharacterModel';
 import { FlightAtmosphere } from './FlightEnvironment';
+import { FlightMotion } from './flightMotion';
 
 // Supplied Boeing bounds: 10.978793m high / 34.294657m long.
 // FlightModel centres those bounds and normalizes the length to 24m.
@@ -168,19 +169,16 @@ function Terminal({ snapshot, meId, enabled,onLock }: { snapshot: Snapshot; meId
  </>;
 }
 
-function Runway({ travel, landing }: { travel: number; landing: boolean }) {
- // Repeat fixed runway details around the vehicle, while movement comes from
- // server distance. The modulo is only scenery; it never advances the flight.
- const offset = ((travel * .18) % 36 + 36) % 36;
+const Runway = memo(function Runway({ markers }: { markers: RefObject<Group | null> }) {
  return <group position={[0, -.1, 0]}>
   <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow><planeGeometry args={[30, 2200]}/><meshStandardMaterial color="#515d62" roughness={.94}/></mesh>
   {[-1, 1].map(side => <mesh key={side} position={[side * 13.8, .015, 0]} rotation={[-Math.PI / 2, 0, 0]}><planeGeometry args={[.22, 2200]}/><meshBasicMaterial color="#e5e7df"/></mesh>)}
-  {Array.from({ length: 25 }, (_, i) => <group key={i} position={[0, .025, (i - 17) * 36 + offset]}>
+  <group ref={markers} name="journey-runway-markers">{Array.from({ length: 25 }, (_, i) => <group key={i} position={[0, .025, (i - 17) * 36]}>
    <mesh rotation={[-Math.PI / 2, 0, 0]}><planeGeometry args={[.5, 13]}/><meshBasicMaterial color="#fff7db"/></mesh>
    <Suspense fallback={null}><JourneyAsset name="runway-lights" scale={1.6}/></Suspense>
-  </group>)}
+  </group>)}</group>
  </group>;
-}
+});
 
 function Sea({ crashed }: { crashed: boolean }) {
  const uniforms = useMemo(() => ({ time: { value: 0 } }), []);
@@ -202,25 +200,36 @@ function OceanImpact({ elapsed }: { elapsed: number }) {
 // The server owns velocity, altitude, attitude, stage and touchdown. The client
 // only smooths those samples and frames the shared aircraft for every player.
 function AircraftJourney({ snapshot }: { snapshot: Snapshot }) {
- const aircraft = useRef<Group>(null); const { camera, size } = useThree();
+ const aircraft = useRef<Group>(null), runwayMarkers = useRef<Group>(null); const { camera, size } = useThree();
  const look = useMemo(() => new Vector3(), []), cameraTarget = useMemo(() => new Vector3(), []);
+ const motion = useMemo(() => new FlightMotion(), []);
  const op = snapshot.operations;
  const crash = op.stage === 'crashed';
+ // Only a mount, room change or crash cut sets the initial transform. A changing JSX position
+ // would overwrite useFrame's motion on every incoming network snapshot.
+ const initialPosition = useMemo<[number, number, number]>(() => [0, crash ? 20 : AIRCRAFT_GROUND_Y + op.altitude * .055, 0], [snapshot.roomId, crash]);
+ useLayoutEffect(() => {
+  motion.ingest(op, snapshot.roomId, performance.now() / 1000, snapshot.phase === 'playing' || crash);
+ }, [motion, op, snapshot.roomId, snapshot.phase, crash]);
  useFrame((_, delta) => {
   if (!aircraft.current) return;
+  const sample = motion.sample(performance.now() / 1000);
   const dt = Math.min(delta, .1), framing = Math.max(1, 1.2 / (size.width / size.height));
-  const y = crash ? Math.max(-4, 20 * (1 - op.elapsed / 8)) : AIRCRAFT_GROUND_Y + op.altitude * .055;
+  // The repeated scenery and aircraft share one continuous presentation clock.
+  // The modulo only recycles runway details; it never advances the simulation.
+  if (runwayMarkers.current) runwayMarkers.current.position.z = MathUtils.euclideanModulo(sample.distance * .18, 36);
+  const y = crash ? Math.max(-4, 20 * (1 - sample.elapsed / 8)) : AIRCRAFT_GROUND_Y + sample.altitude * .055;
   aircraft.current.position.y = MathUtils.damp(aircraft.current.position.y, y, 5, dt);
-  aircraft.current.position.x = MathUtils.damp(aircraft.current.position.x, op.runwayOffset * 14, 4, dt);
-  aircraft.current.rotation.x = MathUtils.damp(aircraft.current.rotation.x, crash ? -.24 : op.pitch * .32, 5, dt);
-  aircraft.current.rotation.z = MathUtils.damp(aircraft.current.rotation.z, crash ? .25 : -op.roll * .44, 5, dt);
+  aircraft.current.position.x = MathUtils.damp(aircraft.current.position.x, sample.runwayOffset * 14, 4, dt);
+  aircraft.current.rotation.x = MathUtils.damp(aircraft.current.rotation.x, crash ? -.24 : sample.pitch * .32, 5, dt);
+  aircraft.current.rotation.z = MathUtils.damp(aircraft.current.rotation.z, crash ? .25 : -sample.roll * .44, 5, dt);
   const p = aircraft.current.position;
   cameraTarget.set(p.x + 31 * framing, p.y + 12 * framing, 33 * framing); camera.position.lerp(cameraTarget, 1 - Math.exp(-3 * dt));
   look.set(p.x, p.y + 1.8, -13); camera.lookAt(look);
  });
  return <>
-  {crash ? <><Sea crashed/><OceanImpact elapsed={op.elapsed}/></> : <><GroundPlane/><Runway travel={op.distance} landing={op.stage === 'landing' || op.stage === 'arrived'}/></>}
-  <group ref={aircraft} position={[0, crash ? 20 : AIRCRAFT_GROUND_Y + op.altitude * .055, 0]}><FlightModel gearDown={op.gearDown}/></group>
+  {crash ? <><Sea crashed/><OceanImpact elapsed={op.elapsed}/></> : <><GroundPlane/><Runway markers={runwayMarkers}/></>}
+  <group ref={aircraft} name="journey-aircraft" position={initialPosition}><FlightModel gearDown={op.gearDown}/></group>
  </>;
 }
 
